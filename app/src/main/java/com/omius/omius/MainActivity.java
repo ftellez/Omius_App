@@ -1,9 +1,4 @@
 // Sign up and Sign in
-// Test 1
-// Test 2
-// Test 3
-// Test 4
-
 //package com.omius.omius;
 //
 //import android.support.v7.app.AppCompatActivity;
