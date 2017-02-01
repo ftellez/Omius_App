@@ -23,6 +23,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.Date;
 
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
@@ -88,22 +89,22 @@ public class SignUpActivity extends AppCompatActivity {
         });
 
         /*
-        private void showPhoto(Uri photoUri) {
-            File imageFile = new File(photoUri);
-            if (imageFile.exists()){
-                Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-                BitmapDrawable drawable = new BitmapDrawable(this.getResources(), bitmap);
-                photoImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                photoImage.setImageDrawable(drawable);
-            }
-        }
-        */
-         private void showPhoto(Uri photoUri) {
+          private void showPhoto(Uri photoUri) {
             if (imageFile.exists()){
                 Drawable oldDrawable = photoImage.getDrawable();
                 if (oldDrawable != null) { ((BitmapDrawable)oldDrawable).getBitmap().recycle(); }
                 // rest as before
             }
+        }
+        */
+    }
+    private void showPhoto(Uri photoUri) {
+        File imageFile = new File(photoUri);
+        if (imageFile.exists()){
+            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+            BitmapDrawable drawable = new BitmapDrawable(this.getResources(), bitmap);
+            photoImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            photoImage.setImageDrawable(drawable);
         }
     }
 
