@@ -1,4 +1,3 @@
-// TEST 1
 package com.omius.omius;
 
 import android.content.Intent;
