@@ -58,7 +58,7 @@ public class SignUpActivity extends AppCompatActivity {
         photoImage = (ImageView) findViewById(R.id.photo_image);
         photoImage.setImageDrawable(null);
 
-        Button callCameraButton = (Button) findViewById(R.id.button_callcamera);  
+        Button callCameraButton = (Button) findViewById(R.id.button_callcamera);
         callCameraButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
