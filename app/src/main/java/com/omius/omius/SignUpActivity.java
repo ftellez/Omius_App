@@ -105,6 +105,15 @@ public class SignUpActivity extends AppCompatActivity {
             photoImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
             photoImage.setImageDrawable(drawable);
         }
+        /*
+         private void showPhoto(Uri photoUri) {
+            if (imageFile.exists()){
+                Drawable oldDrawable = photoImage.getDrawable();
+                if (oldDrawable != null) { ((BitmapDrawable)oldDrawable).getBitmap().recycle(); }
+                // rest as before
+            }
+        }*/
+
     }
 
     ///////////// Camera
