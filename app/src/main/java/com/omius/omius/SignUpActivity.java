@@ -23,7 +23,6 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.Date;
 
-
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
