@@ -1,3 +1,4 @@
+// Hola
 package com.omius.omius;
 
 import android.app.ProgressDialog;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.Date;
+import java.util.Locale;
 
 
 import butterknife.Bind;
@@ -99,7 +101,7 @@ public class SignUpActivity extends AppCompatActivity {
         */
     }
     private void showPhoto(Uri photoUri) {
-        File imageFile = new File(photoUri);
+        File imageFile = new File(photoUri.toString());
         if (imageFile.exists()){
             Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
             BitmapDrawable drawable = new BitmapDrawable(this.getResources(), bitmap);
@@ -127,7 +129,7 @@ public class SignUpActivity extends AppCompatActivity {
                 return null;
             }
         }
-        String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss", locale.UK).format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss", Locale.UK).format(new Date());
         return new File(directory.getPath() + File.separator + "IMG_"
                 + timeStamp + ".jpg");
     }
