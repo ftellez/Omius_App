@@ -75,7 +75,6 @@
                 android:hint="Email" />
         </android.support.design.widget.TextInputLayout>
 
-
         <!-- mobile number -->
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
@@ -102,7 +101,6 @@
                 android:hint="Password"/>
         </android.support.design.widget.TextInputLayout>
 
-
         <!-- Password Re-enter Label -->
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
@@ -115,7 +113,6 @@
                 android:inputType="textPassword"
                 android:hint="Re-enter Password"/>
         </android.support.design.widget.TextInputLayout>
-
 
         <!-- Signup Button -->
         <android.support.v7.widget.AppCompatButton
