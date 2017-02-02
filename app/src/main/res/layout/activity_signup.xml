@@ -63,8 +63,6 @@
                 android:hint="Address" />
         </android.support.design.widget.TextInputLayout>
 
-
-
         <!--  Email Label -->
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
