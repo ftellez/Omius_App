@@ -2,17 +2,30 @@ package com.omius.omius;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.icu.text.SimpleDateFormat;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.util.Date;
+import java.util.Locale;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
+
 
 public class SignInActivity extends AppCompatActivity {
 
@@ -45,7 +58,8 @@ public class SignInActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Start the Signup activity
-                Intent intent = new Intent(getApplicationContext(), SignUpActivity.class);
+                Intent intent = new Intent(getApplicationContext(), RegisterActivity.class);
+                //Intent intent = new Intent(getApplicationContext(), SignUpActivity.class);
                 startActivityForResult(intent, REQUEST_SIGNUP);
                 finish();
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
@@ -135,3 +149,4 @@ public class SignInActivity extends AppCompatActivity {
     }
 
 }
+

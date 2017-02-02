@@ -40,12 +40,12 @@ public class SignUpActivity extends AppCompatActivity {
     @Bind(R.id.input_address) EditText _addressText;
     @Bind(R.id.input_email) EditText _emailText;
     @Bind(R.id.input_mobile) EditText _mobileText;
-    @Bind(R.id.input_password) EditText _passwordText;
-    @Bind(R.id.input_reEnterPassword) EditText _reEnterPasswordText;
+    //@Bind(R.id.input_password) EditText _passwordText;
+    //@Bind(R.id.input_reEnterPassword) EditText _reEnterPasswordText;
     @Bind(R.id.btn_signup)
     Button _signupButton;
-    @Bind(R.id.link_login)
-    TextView _loginLink;
+    //@Bind(R.id.link_login)
+    //TextView _loginLink;
 
     //Camera
    // private static final String TAG = "CallCamera";
@@ -80,6 +80,7 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
 
+        /*
         _loginLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -90,6 +91,7 @@ public class SignUpActivity extends AppCompatActivity {
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
             }
         });
+        */
 
         /*
           private void showPhoto(Uri photoUri) {
@@ -196,8 +198,8 @@ public class SignUpActivity extends AppCompatActivity {
         String address = _addressText.getText().toString();
         String email = _emailText.getText().toString();
         String mobile = _mobileText.getText().toString();
-        String password = _passwordText.getText().toString();
-        String reEnterPassword = _reEnterPasswordText.getText().toString();
+        //String password = _passwordText.getText().toString();
+        //String reEnterPassword = _reEnterPasswordText.getText().toString();
 
         // TODO: Implement your own signup logic here.
 
@@ -233,8 +235,8 @@ public class SignUpActivity extends AppCompatActivity {
         String address = _addressText.getText().toString();
         String email = _emailText.getText().toString();
         String mobile = _mobileText.getText().toString();
-        String password = _passwordText.getText().toString();
-        String reEnterPassword = _reEnterPasswordText.getText().toString();
+        //String password = _passwordText.getText().toString();
+        //String reEnterPassword = _reEnterPasswordText.getText().toString();
 
         if (name.isEmpty() || name.length() < 3) {
             _nameText.setError("at least 3 characters");
@@ -265,21 +267,21 @@ public class SignUpActivity extends AppCompatActivity {
             _mobileText.setError(null);
         }
 
+        /*
         if (password.isEmpty() || password.length() < 4 || password.length() > 10) {
             _passwordText.setError("between 4 and 10 alphanumeric characters");
             valid = false;
         } else {
             _passwordText.setError(null);
         }
-
         if (reEnterPassword.isEmpty() || reEnterPassword.length() < 4 || reEnterPassword.length() > 10 || !(reEnterPassword.equals(password))) {
             _reEnterPasswordText.setError("Password Do not match");
             valid = false;
         } else {
             _reEnterPasswordText.setError(null);
         }
+        */
 
         return valid;
     }
-
 }

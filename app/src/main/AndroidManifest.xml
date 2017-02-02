@@ -30,6 +30,9 @@
             </intent-filter>
         </activity>
         <activity
+            android:name="com.omius.omius.RegisterActivity"
+            android:theme="@style/AppTheme.Dark" />
+        <activity
             android:name="com.omius.omius.SignInActivity"
             android:theme="@style/AppTheme.Dark" />
         <activity
