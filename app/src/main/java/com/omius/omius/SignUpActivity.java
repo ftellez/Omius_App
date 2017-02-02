@@ -6,13 +6,14 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
+import android.graphics.Matrix;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -23,8 +24,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.Date;
-import java.util.Locale;
-
+//import java.text.DateFormat;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -59,13 +59,13 @@ public class SignUpActivity extends AppCompatActivity {
         setContentView(R.layout.activity_signup);
         ButterKnife.bind(this);
         photoImage = (ImageView) findViewById(R.id.photo_image);
-        photoImage.setImageDrawable(null);
+//        photoImage.setImageDrawable(null);
 
         Button callCameraButton = (Button) findViewById(R.id.button_callcamera);
         callCameraButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                File file = getOutputPhotoFile();
+                //File file = getOutputPhotoFile();
                 fileUri = Uri.fromFile(getOutputPhotoFile());
                 i.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
                 startActivityForResult(i, CAPTURE_IMAGE_ACTIVITY_REQ );
@@ -101,25 +101,38 @@ public class SignUpActivity extends AppCompatActivity {
         */
     }
     private void showPhoto(Uri photoUri) {
-        File imageFile = new File(photoUri.toString());
-        if (imageFile.exists()){
-            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-            BitmapDrawable drawable = new BitmapDrawable(this.getResources(), bitmap);
-            photoImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            photoImage.setImageDrawable(drawable);
+        File imageFile = new File(photoUri.getPath().toString());
+        if (imageFile.isFile()) {
+            Bitmap bitmap = RotateBitmap(resizeImage(imageFile.getAbsolutePath()),270);
+//            BitmapDrawable drawable = new BitmapDrawable(this.getResources(), bitmap);
+//            photoImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//            photoImage.setImageDrawable(drawable);
+            photoImage.setImageBitmap(bitmap);
         }
-        /*
-         private void showPhoto(Uri photoUri) {
-            if (imageFile.exists()){
-                Drawable oldDrawable = photoImage.getDrawable();
-                if (oldDrawable != null) { ((BitmapDrawable)oldDrawable).getBitmap().recycle(); }
-                // rest as before
-            }
-        }*/
+    }
 
+    private Bitmap resizeImage(String imgPath) {
+        BitmapFactory.Options options;
+        try {
+            options = new BitmapFactory.Options();
+            options.inSampleSize = 3;// 1/3 of origin image size from width and height
+            Bitmap bitmap = BitmapFactory.decodeFile(imgPath, options);
+            return bitmap;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Bitmap RotateBitmap(Bitmap source, float angle)
+    {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
     ///////////// Camera
+    @Nullable
     private File getOutputPhotoFile() {
         File directory = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), getPackageName());
@@ -129,7 +142,8 @@ public class SignUpActivity extends AppCompatActivity {
                 return null;
             }
         }
-        String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss", Locale.UK).format(new Date());
+        CharSequence charSeq = new String("yyyMMddHHmmss");
+        String timeStamp = new DateFormat().format(charSeq,new Date()).toString();
         return new File(directory.getPath() + File.separator + "IMG_"
                 + timeStamp + ".jpg");
     }
@@ -143,10 +157,12 @@ public class SignUpActivity extends AppCompatActivity {
                     Toast.makeText(this, "Image saved successfully",
                             Toast.LENGTH_LONG).show();
                     photoUri = fileUri;
+                    showPhoto(photoUri);
                 } else {
                     photoUri = data.getData();
                     Toast.makeText(this, "Image saved successfully in: " + data.getData(),
                             Toast.LENGTH_LONG).show();
+                    showPhoto(photoUri);
                 }
                 // showPhoto(photoUri);
             } else if (resultCode == RESULT_CANCELED) {
