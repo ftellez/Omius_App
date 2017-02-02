@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.omius.omius">
 
+    <!--
+        Fix permissions on storage and camera access
+        Android Matshmallow Galaxy S6 : manual permission grants
+        http://stackoverflow.com/questions/32225506/android-6m-permission-issue-create-directory-not-working
+    -->
+
     <uses-permission android:name="android.permission.BLUETOOTH"></uses-permission>
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
