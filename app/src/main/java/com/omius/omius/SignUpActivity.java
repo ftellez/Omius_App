@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,7 +62,7 @@ public class SignUpActivity extends AppCompatActivity {
         photoImage = (ImageView) findViewById(R.id.photo_image);
 //        photoImage.setImageDrawable(null);
 
-        Button callCameraButton = (Button) findViewById(R.id.button_callcamera);
+        ImageButton callCameraButton = (ImageButton) findViewById(R.id.button_callcamera);
         callCameraButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);

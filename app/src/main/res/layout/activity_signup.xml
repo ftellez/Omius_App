@@ -18,24 +18,23 @@
         <ImageView
             android:layout_width="151dp"
             app:srcCompat="@mipmap/blankprofilehi"
-            android:id="@+id/photo_image"
             android:layout_gravity="center_horizontal"
             android:layout_weight="0.09"
             android:scaleType="centerInside"
             android:adjustViewBounds="true"
             android:layout_height="150dp"
             android:padding="1dp"
-            android:background="#000000">
+            android:background="#000000"
+            android:id="@+id/photo_image">
         </ImageView>
 
-        <Button
-            android:id="@+id/button_callcamera"
-            android:layout_width="111dp"
+        <ImageButton
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="18dp"
-            android:text="@string/get_photo" />
+            app:srcCompat="@mipmap/ic_camera"
+            android:id="@+id/button_callcamera"
+            android:adjustViewBounds="true"
+            android:layout_gravity="center_horizontal"/>
 
         <!-- Name Label -->
         <android.support.design.widget.TextInputLayout
