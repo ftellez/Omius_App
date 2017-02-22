@@ -7,10 +7,11 @@
         Android Matshmallow Galaxy S6 : manual permission grants
         http://stackoverflow.com/questions/32225506/android-6m-permission-issue-create-directory-not-working
     -->
-
-    <uses-permission android:name="android.permission.BLUETOOTH"></uses-permission>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-feature android:name="android.hardware.camera" />
 
     <application
@@ -24,10 +25,6 @@
         <activity
             android:name=".Start"
             android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity
             android:name="com.omius.omius.RegisterActivity"
@@ -37,6 +34,11 @@
             android:theme="@style/AppTheme.Dark" />
         <activity
             android:name="com.omius.omius.SignUpActivity"
-            android:theme="@style/AppTheme.Dark" />
+            android:theme="@style/AppTheme.Dark">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

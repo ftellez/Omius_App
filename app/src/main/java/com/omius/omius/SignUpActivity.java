@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.Date;
 //import java.text.DateFormat;
 
@@ -52,6 +53,7 @@ public class SignUpActivity extends AppCompatActivity {
     private static final int CAPTURE_IMAGE_ACTIVITY_REQ = 0;
     Uri fileUri = null;
     ImageView photoImage = null;
+    ImageUploadHandler imgupload;
 
 
     @Override
@@ -79,50 +81,35 @@ public class SignUpActivity extends AppCompatActivity {
                 signup();
             }
         });
-
-        /*
-        _loginLink.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Finish the registration screen and return to the Login activity
-                Intent intent = new Intent(getApplicationContext(),SignInActivity.class);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-            }
-        });
-        */
-
-        /*
-          private void showPhoto(Uri photoUri) {
-            if (imageFile.exists()){
-                Drawable oldDrawable = photoImage.getDrawable();
-                if (oldDrawable != null) { ((BitmapDrawable)oldDrawable).getBitmap().recycle(); }
-                // rest as before
-            }
-        }
-        */
     }
+
     private void showPhoto(Uri photoUri) {
-        File imageFile = new File(photoUri.getPath().toString());
+        File imageFile = new File(photoUri.getPath().toString()); //photoUri.getPath().toString()
+        InputStream iStream = null;
         if (imageFile.isFile()) {
-            Bitmap bitmap = RotateBitmap(resizeImage(imageFile.getAbsolutePath()),270);
-//            BitmapDrawable drawable = new BitmapDrawable(this.getResources(), bitmap);
-//            photoImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-//            photoImage.setImageDrawable(drawable);
+            try {
+                iStream = getContentResolver().openInputStream(photoUri);
+            } catch (Exception ex){
+                Toast.makeText(getBaseContext(),ex.getMessage(),Toast.LENGTH_SHORT).show();
+            }
+            Bitmap bitmap = RotateBitmap(resizeImage(iStream),270);
+            imgupload = new ImageUploadHandler();
+            imgupload.setOnVariables(photoUri,bitmap);
+            imgupload.uploadImage(SignUpActivity.this);
+            Toast.makeText(getBaseContext(),"Imagen subida exitosamente",Toast.LENGTH_LONG).show();
             photoImage.setImageBitmap(bitmap);
         }
     }
 
-    private Bitmap resizeImage(String imgPath) {
+    public Bitmap resizeImage (InputStream is) {
         BitmapFactory.Options options;
         try {
             options = new BitmapFactory.Options();
-            options.inSampleSize = 3;// 1/3 of origin image size from width and height
-            Bitmap bitmap = BitmapFactory.decodeFile(imgPath, options);
+            options.inSampleSize = 4; // 1/3 of origin image size from width and height
+            Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
             return bitmap;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         return null;
     }
@@ -134,7 +121,6 @@ public class SignUpActivity extends AppCompatActivity {
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
-    ///////////// Camera
     @Nullable
     private File getOutputPhotoFile() {
         File directory = new File(Environment.getExternalStoragePublicDirectory(
