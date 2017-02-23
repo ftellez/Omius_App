@@ -8,6 +8,7 @@ import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -21,9 +22,21 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Locale;
 
 import butterknife.Bind;
@@ -33,15 +46,13 @@ public class RegisterActivity extends AppCompatActivity {
 
     //Register
     private static final String TAG = "RegisterActivity";
-    @Bind(R.id.input_name)
-    EditText _nameText;
-    @Bind(R.id.input_email) EditText _emailText;
-    @Bind(R.id.input_mobile) EditText _mobileText;
-    @Bind(R.id.btn_register)
-    Button _registerButton;
+    @Bind(R.id.input_firstname)   EditText _firstnameText;
+    @Bind(R.id.input_lastname) EditText _lastnameText;
+    @Bind(R.id.input_email)  EditText _emailText;
+    @Bind(R.id.btn_register) Button _registerButton;
+    String[] valuesPOST = new String[3];
 
-    //Camera
-    // private static final String TAG = "CallCamera";
+    //Camera  private static final String TAG = "CallCamera";
     private static final int CAPTURE_IMAGE_ACTIVITY_REQ = 0;
     Uri fileUri = null;
     ImageView photoImage = null;
@@ -69,11 +80,8 @@ public class RegisterActivity extends AppCompatActivity {
 
         _registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                register();
-            }
+            public void onClick(View v) { register(); }
         });
-
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////// Camera methods
@@ -105,8 +113,7 @@ public class RegisterActivity extends AppCompatActivity {
         return null;
     }
 
-    public static Bitmap RotateBitmap(Bitmap source, float angle)
-    {
+    public static Bitmap RotateBitmap(Bitmap source, float angle) {
         Matrix matrix = new Matrix();
         matrix.postRotate(angle);
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
@@ -172,16 +179,18 @@ public class RegisterActivity extends AppCompatActivity {
         progressDialog.setMessage("Creating Registry...");
         progressDialog.show();
 
-        String name   = _nameText.getText().toString();
-        String email  = _emailText.getText().toString();
-        String mobile = _mobileText.getText().toString();
+        valuesPOST[0] = _firstnameText.getText().toString();
+        valuesPOST[1] = _lastnameText.getText().toString();
+        valuesPOST[2] = _emailText.getText().toString();
 
-
-        // TODO: Implement your own register logic here.
+        new SendPOSTrequest().execute();
 
         imgupload = new ImageUploadHandler();
         imgupload.setOnVariables(fileUri,bmp);
         imgupload.uploadImage(RegisterActivity.this);
+
+        new android.os.Handler().postDelayed(new Runnable() {
+        // TODO: Implement your own register logic here.
 
         new android.os.Handler().postDelayed(
                 new Runnable() {
@@ -194,7 +203,6 @@ public class RegisterActivity extends AppCompatActivity {
                     }
                 }, 3000);
     }
-
 
     public void onRegisterSuccess() {
         _registerButton.setEnabled(true);
@@ -210,28 +218,102 @@ public class RegisterActivity extends AppCompatActivity {
     // Method validates input text on every field.
     public boolean validate() {
         boolean valid  = true;
-        String name    = _nameText.getText().toString();
-        String email   = _emailText.getText().toString();
-        String mobile  = _mobileText.getText().toString();
+        String fn  = _firstnameText.getText().toString();
+        String ln  = _lastnameText.getText().toString();
+        String em  = _emailText.getText().toString();
 
         // check that the field is not empty and is at least three chars.
-        if (name.isEmpty() || name.length() < 3) {
-            _nameText.setError("At least 3 characters");
+        if (fn.isEmpty() || fn.length() < 3) {
+            _firstnameText.setError("At least 3 characters");
             valid = false;
-        } else { _nameText.setError(null); }
+        } else { _firstnameText.setError(null); }
+
+        // check that field is not empty and its length is 10
+        if (ln.isEmpty() || ln.length() < 3) {
+            _lastnameText.setError("At least 3 characters");
+            valid = false;
+        } else { _lastnameText.setError(null); }
 
         // check that field is not empty and its pattern of an email matches.
-        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (em.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(em).matches()) {
             _emailText.setError("Enter a valid email address");
             valid = false;
         } else { _emailText.setError(null); }
 
-        // check that field is not empty and its length is 10
-        if (mobile.isEmpty() || mobile.length()!=10) {
-            _mobileText.setError("Enter Valid Mobile Number");
-            valid = false;
-        } else { _mobileText.setError(null); }
-
         return valid;
+    }
+
+    ///////////////////////////////////////////////////////////
+    private class SendPOSTrequest extends AsyncTask<String, Void, String> {
+        protected void onPreExecute() {}
+        protected String doInBackground(String...params) {
+            try {
+                // Create URL and JSON Object
+                //We will use URLconnection for HTTP to send and receive data
+                URL url = new URL("http://planz.omiustech.com/bombaacida.php");
+                JSONObject postDataparams = new JSONObject();
+                postDataparams.put("Firstname", valuesPOST[0]);
+                postDataparams.put("Lastname",  valuesPOST[1]);
+                postDataparams.put("email",  valuesPOST[2]);
+
+                HttpURLConnection httpclient = (HttpURLConnection) url.openConnection();
+                httpclient.setReadTimeout(15000);
+                httpclient.setConnectTimeout(15000);
+                httpclient.setRequestMethod("POST");
+                httpclient.setDoOutput(true);
+                httpclient.setDoInput(true);
+
+                // Get response
+                OutputStream os = httpclient.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(getPostDataString(postDataparams));
+                writer.flush();
+                writer.close();
+                os.close();
+
+                int responseCode = httpclient.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(httpclient.getInputStream()));
+                    StringBuffer sb = new StringBuffer("");
+                    String line = "";
+
+                    while ((line = in.readLine()) != null) {
+                        sb.append(line);
+                        break;
+                    }
+
+                    in.close();
+                    return sb.toString();
+                } else { return new String("false: " + responseCode);}
+            } catch (Exception e) { return new String("Exception: " + e.getMessage()); }
+        }
+
+        //Get response
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getApplicationContext(), result,
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    //Method to convert JSON Obect to encode url string format
+    public String getPostDataString(JSONObject params) throws Exception {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        Iterator<String> itr = params.keys();
+
+        while (itr.hasNext()){
+            String key = itr.next();
+            Object value = params.get(key);
+
+            if (first){ first = false;
+            } else { result.append("&");}
+
+            result.append(URLEncoder.encode(key, "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
+        }
+        return result.toString();
     }
 }
