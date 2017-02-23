@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity {
+public class GraphActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBtAdapter;
     private BluetoothSocket btSocket;
@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             final AlertDialog dialog;
-            final AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+            final AlertDialog.Builder alertDialog = new AlertDialog.Builder(GraphActivity.this);
             LayoutInflater inflater = getLayoutInflater();
             View convertView = (View) inflater.inflate(R.layout.custom, null);
             alertDialog.setView(convertView);
@@ -289,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
         //If it is not an exception will be thrown in the write method and finish() will be called
         //--------mConnectedThread.write("x");
 
-        final AlertDialog addressConf = new AlertDialog.Builder(MainActivity.this)
+        final AlertDialog addressConf = new AlertDialog.Builder(GraphActivity.this)
                 .setTitle("Bluetooth Address")
                 .setMessage("Connection Ready!")
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
