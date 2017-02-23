@@ -93,9 +93,6 @@ public class SignUpActivity extends AppCompatActivity {
                 Toast.makeText(getBaseContext(),ex.getMessage(),Toast.LENGTH_SHORT).show();
             }
             bmp = RotateBitmap(resizeImage(iStream),270);
-//            imgupload = new ImageUploadHandler();
-//            imgupload.setOnVariables(photoUri,bmp);
-//            imgupload.uploadImage(SignUpActivity.this);
             Toast.makeText(getBaseContext(),"Imagen subida exitosamente",Toast.LENGTH_LONG).show();
             photoImage.setImageBitmap(bmp);
         }
