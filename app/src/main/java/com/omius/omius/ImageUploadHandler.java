@@ -45,25 +45,25 @@ public class ImageUploadHandler extends AppCompatActivity{
 
     private int PICK_IMAGE_REQUEST = 1;
 
-    private ImageView imageView;
+    //private ImageView imageView;
     private Bitmap bitmap;
     private Uri filePath;
-    private Context context;
-    private Activity actDB;
+    //private Context context;
+    //private Activity actDB;
 
     public ImageUploadHandler(){
         this.filePath = null;
     }
 
-    public ImageUploadHandler(Activity db, Context context, ImageView img) {
-        this.context = context;
-        this.imageView = img;
-        this.actDB = db;
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        db.startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
-    }
+//    public ImageUploadHandler(Activity db, Context context, ImageView img) {
+//        this.context = context;
+//        this.imageView = img;
+//        this.actDB = db;
+//        Intent intent = new Intent();
+//        intent.setType("image/*");
+//        intent.setAction(Intent.ACTION_GET_CONTENT);
+//        db.startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+//    }
 
     public void setOnVariables(Uri filepath, Bitmap bmp){
         this.filePath = filepath;
@@ -74,14 +74,11 @@ public class ImageUploadHandler extends AppCompatActivity{
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] imageBytes = baos.toByteArray();
-        String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
-        return encodedImage;
+        return Base64.encodeToString(imageBytes, Base64.DEFAULT);
     }
 
     public void uploadImage(Activity db){
         class UploadImage extends AsyncTask<Bitmap,Void,String> {
-
-            ProgressDialog loading;
             RequestHandler rh = new RequestHandler();
             Activity db;
 
@@ -91,20 +88,16 @@ public class ImageUploadHandler extends AppCompatActivity{
 
             @Override
             protected void onPreExecute() {
-                //super.onPreExecute();
-                //loading = ProgressDialog.show(this.db.getParent(), "Uploading Image", "Please wait...",true,true);
             }
 
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
-                //loading.dismiss();
-                //Toast.makeText(db.getApplicationContext(),s, Toast.LENGTH_LONG).show();
             }
 
             @Override
             protected String doInBackground(Bitmap... params) {
-                android.os.Debug.waitForDebugger();
+                //android.os.Debug.waitForDebugger();
                 Bitmap bitmap = params[0];
                 String uploadImage = getStringImage(bitmap);
 

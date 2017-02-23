@@ -36,8 +36,7 @@ public class SignUpActivity extends AppCompatActivity {
     //Signup
     private static final String TAG = "SignupActivity";
 
-    @Bind(R.id.input_name)
-    EditText _nameText;
+    @Bind(R.id.input_name) EditText _nameText;
     @Bind(R.id.input_address) EditText _addressText;
     @Bind(R.id.input_email) EditText _emailText;
     @Bind(R.id.input_mobile) EditText _mobileText;
@@ -54,6 +53,7 @@ public class SignUpActivity extends AppCompatActivity {
     Uri fileUri = null;
     ImageView photoImage = null;
     ImageUploadHandler imgupload;
+    Bitmap bmp;
 
 
     @Override
@@ -92,12 +92,12 @@ public class SignUpActivity extends AppCompatActivity {
             } catch (Exception ex){
                 Toast.makeText(getBaseContext(),ex.getMessage(),Toast.LENGTH_SHORT).show();
             }
-            Bitmap bitmap = RotateBitmap(resizeImage(iStream),270);
-            imgupload = new ImageUploadHandler();
-            imgupload.setOnVariables(photoUri,bitmap);
-            imgupload.uploadImage(SignUpActivity.this);
+            bmp = RotateBitmap(resizeImage(iStream),270);
+//            imgupload = new ImageUploadHandler();
+//            imgupload.setOnVariables(photoUri,bmp);
+//            imgupload.uploadImage(SignUpActivity.this);
             Toast.makeText(getBaseContext(),"Imagen subida exitosamente",Toast.LENGTH_LONG).show();
-            photoImage.setImageBitmap(bitmap);
+            photoImage.setImageBitmap(bmp);
         }
     }
 
@@ -153,6 +153,8 @@ public class SignUpActivity extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                     showPhoto(photoUri);
                 }
+
+
                 // showPhoto(photoUri);
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, "Cancelled", Toast.LENGTH_SHORT).show();
@@ -189,6 +191,10 @@ public class SignUpActivity extends AppCompatActivity {
 
         // TODO: Implement your own signup logic here.
 
+        imgupload = new ImageUploadHandler();
+        imgupload.setOnVariables(fileUri,bmp);
+        imgupload.uploadImage(SignUpActivity.this);
+
         new android.os.Handler().postDelayed(
                 new Runnable() {
                     public void run() {
@@ -205,7 +211,8 @@ public class SignUpActivity extends AppCompatActivity {
     public void onSignupSuccess() {
         _signupButton.setEnabled(true);
         setResult(RESULT_OK, null);
-        finish();
+        Toast.makeText(getApplicationContext(), "Login succesfully!", Toast.LENGTH_LONG).show();
+//        finish();
     }
 
     public void onSignupFailed() {
