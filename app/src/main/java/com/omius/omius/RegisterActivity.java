@@ -190,10 +190,6 @@ public class RegisterActivity extends AppCompatActivity {
         imgupload.uploadImage(RegisterActivity.this);
 
         new android.os.Handler().postDelayed(new Runnable() {
-        // TODO: Implement your own register logic here.
-
-        new android.os.Handler().postDelayed(
-                new Runnable() {
                     public void run() {
                         // On complete call either onRegisterSuccess or onRegisterFailed
                         // depending on success
