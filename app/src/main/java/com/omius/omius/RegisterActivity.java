@@ -43,7 +43,6 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class RegisterActivity extends AppCompatActivity {
-
     //Register
     private static final String TAG = "RegisterActivity";
     @Bind(R.id.input_firstname)   EditText _firstnameText;
@@ -190,14 +189,14 @@ public class RegisterActivity extends AppCompatActivity {
         imgupload.uploadImage(RegisterActivity.this);
 
         new android.os.Handler().postDelayed(new Runnable() {
-                    public void run() {
-                        // On complete call either onRegisterSuccess or onRegisterFailed
-                        // depending on success
-                        onRegisterSuccess();
-                        //onRegisterFailed();
-                        progressDialog.dismiss();
-                    }
-                }, 3000);
+        // TODO: Implement your own register logic here.
+            public void run() {
+                // On complete call either onRegisterSuccess or onRegisterFailed depending on success
+                onRegisterSuccess();
+                //onRegisterFailed();
+                progressDialog.dismiss();
+            }
+        }, 3000);
     }
 
     public void onRegisterSuccess() {
