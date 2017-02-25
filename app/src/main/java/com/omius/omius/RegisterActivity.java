@@ -141,13 +141,13 @@ public class RegisterActivity extends AppCompatActivity {
                 if (data == null) {
                     // A known bug here! The image should have saved in fileUri
                     Toast.makeText(this, "Image loaded successfully",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                     photoUri = fileUri;
                     showPhoto(photoUri);
                 } else {
                     photoUri = data.getData();
                     Toast.makeText(this, "Image loaded successfully in: " + data.getData(),
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                     showPhoto(photoUri);
                 }
                 // showPhoto(photoUri);
@@ -203,6 +203,8 @@ public class RegisterActivity extends AppCompatActivity {
         _registerButton.setEnabled(true);
         setResult(RESULT_OK, null);
         //finish();
+        Intent intent = new Intent(this, GraphActivity.class);
+        startActivity(intent);
     }
 
     public void onRegisterFailed() {
