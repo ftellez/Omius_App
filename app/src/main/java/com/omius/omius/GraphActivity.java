@@ -161,10 +161,8 @@ public class GraphActivity extends AppCompatActivity {
 
                                 Points.add(Float.parseFloat(coord1));
                                 Points.add(Float.parseFloat(coord2));
-
 //                                coord1 = null;
 //                                coord2 = null;
-
 //                                RefreshGraph(chart);
                             }
                         } else {
