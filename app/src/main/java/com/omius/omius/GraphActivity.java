@@ -22,6 +22,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
@@ -45,10 +46,20 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.IDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -66,6 +77,7 @@ public class GraphActivity extends AppCompatActivity {
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     Handler bluetoothIn;
     private StringBuilder recDataString = new StringBuilder();
+    String[] valuesPOST = new String[3];
 
     String coord1 = null;
     String coord2 = null;
@@ -438,5 +450,78 @@ public class GraphActivity extends AppCompatActivity {
                 finish();
             }
         }
+    }
+
+    private class SendPOSTrequest extends AsyncTask<String, Void, String> {
+        protected void onPreExecute() {}
+        protected String doInBackground(String...params) {
+            try {
+                // Create URL and JSON Object
+                //We will use URLconnection for HTTP to send and receive data
+                URL url = new URL("http://planz.omiustech.com/bombaacida.php");
+                JSONObject postDataparams = new JSONObject();
+                postDataparams.put("Firstname", valuesPOST[0]);
+                postDataparams.put("Lastname",  valuesPOST[1]);
+                postDataparams.put("email",  valuesPOST[2]);
+
+                HttpURLConnection httpclient = (HttpURLConnection) url.openConnection();
+                httpclient.setReadTimeout(15000);
+                httpclient.setConnectTimeout(15000);
+                httpclient.setRequestMethod("POST");
+                httpclient.setDoOutput(true);
+                httpclient.setDoInput(true);
+
+                // Get response
+                OutputStream os = httpclient.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(getPostDataString(postDataparams));
+                writer.flush();
+                writer.close();
+                os.close();
+
+                int responseCode = httpclient.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(httpclient.getInputStream()));
+                    StringBuffer sb = new StringBuffer("");
+                    String line = "";
+
+                    while ((line = in.readLine()) != null) {
+                        sb.append(line);
+                        break;
+                    }
+
+                    in.close();
+                    return sb.toString();
+                } else { return new String("false: " + responseCode);}
+            } catch (Exception e) { return new String("Exception: " + e.getMessage()); }
+        }
+
+        //Get response
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getApplicationContext(), result,
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    //Method to convert JSON Obect to encode url string format
+    public String getPostDataString(JSONObject params) throws Exception {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        Iterator<String> itr = params.keys();
+
+        while (itr.hasNext()){
+            String key = itr.next();
+            Object value = params.get(key);
+
+            if (first){ first = false;
+            } else { result.append("&");}
+
+            result.append(URLEncoder.encode(key, "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
+        }
+        return result.toString();
     }
 }
