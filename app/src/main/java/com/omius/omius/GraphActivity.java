@@ -169,7 +169,7 @@ public class GraphActivity extends AppCompatActivity {
                             }
                         } else {
                             if (coordtemp == null){
-                                if (endOfLineIndex > 0) {                                           // make sure there data before ~
+                                if (endOfLineIndex > 0) {                               // make sure there data before ~
                                     String chk = recDataString.substring(0, endOfLineIndex);
 //                                Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
                                     coordtemp = chk;
