@@ -357,7 +357,6 @@ public class GraphActivity extends AppCompatActivity {
             }
         }
 
-
         //When activity is resumed, attempt to send a piece of junk data ('x') so that it will fail if not connected
         // i.e don't wait for a user to press button to recognise connection failure
         if (mConnectedThread == null) {

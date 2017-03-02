@@ -1,7 +1,10 @@
 package com.omius.omius;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -11,10 +14,17 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,9 +32,14 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Context;
+
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,9 +50,14 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.jar.Manifest;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -45,18 +65,26 @@ import butterknife.ButterKnife;
 public class RegisterActivity extends AppCompatActivity {
     //Register
     private static final String TAG = "RegisterActivity";
-    @Bind(R.id.input_firstname)   EditText _firstnameText;
-    @Bind(R.id.input_lastname) EditText _lastnameText;
-    @Bind(R.id.input_email)  EditText _emailText;
-    @Bind(R.id.btn_register) Button _registerButton;
+    @Bind(R.id.input_firstname)
+    EditText _firstnameText;
+    @Bind(R.id.input_lastname)
+    EditText _lastnameText;
+    @Bind(R.id.input_email)
+    EditText _emailText;
+    @Bind(R.id.btn_register)
+    Button _registerButton;
     String[] valuesPOST = new String[3];
 
     //Camera  private static final String TAG = "CallCamera";
+    public static final int REQUEST_MULTIPLE_PERMISSIONS = 1;
+    private View view;
     private static final int CAPTURE_IMAGE_ACTIVITY_REQ = 0;
     Uri fileUri = null;
     ImageView photoImage = null;
     ImageUploadHandler imgupload;
     Bitmap bmp;
+
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,51 +92,132 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.register_activity);
         ButterKnife.bind(this);
         photoImage = (ImageView) findViewById(R.id.photo_image);
-//        photoImage.setImageDrawable(null);
-
         ImageButton callCameraButton = (ImageButton) findViewById(R.id.button_callcamera);
+
+        if (checkPermissionsAndRequest()) {
+
+        }
+
         callCameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override   // Check if this works
             public void onClick(View view) {
                 Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 //File file = getOutputPhotoFile();
                 fileUri = Uri.fromFile(getOutputPhotoFile());
                 i.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-                startActivityForResult(i, CAPTURE_IMAGE_ACTIVITY_REQ );
+                startActivityForResult(i, CAPTURE_IMAGE_ACTIVITY_REQ);
             }
         });
 
-        _registerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) { register(); }
-        });
+            _registerButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) { register(); }
+            });
+            // ATTENTION: This was auto-generated to implement the App Indexing API.
+            // See https://g.co/AppIndexing/AndroidStudio for more information.
+            client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Camera methods
+    private boolean checkPermissionsAndRequest() {
+        int permissionCamera = ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.CAMERA);
+        int permissionStorage = ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        List<String> listPermissions = new ArrayList<>();
+        if (permissionStorage != PackageManager.PERMISSION_GRANTED) {
+            listPermissions.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (permissionCamera != PackageManager.PERMISSION_GRANTED) {
+            listPermissions.add(android.Manifest.permission.CAMERA);
+        }
+        if (!listPermissions.isEmpty()){
+            ActivityCompat.requestPermissions(this, listPermissions.toArray(new String[listPermissions.size()]),REQUEST_MULTIPLE_PERMISSIONS);
+            return false;
+        }
+        return true;
     }
-////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////// Camera methods
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults){
+        Log.d(TAG, "Permission callback called-------");
+        switch (requestCode) {
+            case REQUEST_MULTIPLE_PERMISSIONS: {
+                Map<String, Integer> perms = new HashMap<>();
+                perms.put(android.Manifest.permission.CAMERA, PackageManager.PERMISSION_GRANTED);
+                perms.put(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
+                // Fill with actual results from user
+                if (grantResults.length > 0) {
+                    for (int i = 0; i < permissions.length; i++) perms.put(permissions[i], grantResults[i]);
+                    // Check for both permissions
+                    if (perms.get(android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                        Log.d(TAG, "camera and storage permission granted");
+                        // process the normal flow
+                        //else any one or both the permissions are not granted
+                    } else {
+                        Log.d(TAG, "Some permissions are not granted ask again ");
+                        //permission is denied (this is the first time, when "never ask again" is not checked) so ask again explaining the usage of permission
+//                      // shouldShowRequestPermissionRationale will return true
+                        //show the dialog or snackbar saying its necessary and try again otherwise proceed with setup.
+                        if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.CAMERA) || ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                            showDialogOK("SMS and Location Services Permission required for this app",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            switch (which) {
+                                                case DialogInterface.BUTTON_POSITIVE:
+                                                    checkPermissionsAndRequest();
+                                                    break;
+                                                case DialogInterface.BUTTON_NEGATIVE:
+                                                    // proceed with logic by disabling the related features or quit the app.
+                                                    break;
+                                            }
+                                        }
+                                    });
+                        }
+                        //permission is denied (and never ask again is  checked)
+                        //shouldShowRequestPermissionRationale will return false
+                        else {
+                            Toast.makeText(this, "Go to settings and enable permissions", Toast.LENGTH_LONG).show();
+                            //proceed with logic by disabling the related features or quit the app.
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void showDialogOK(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", okListener)
+                .create()
+                .show();
+    }
+
     private void showPhoto(Uri photoUri) {
         File imageFile = new File(photoUri.getPath().toString()); //photoUri.getPath().toString()
         InputStream iStream = null;
         if (imageFile.isFile()) {
-            try {
-                iStream = getContentResolver().openInputStream(photoUri);
-            } catch (Exception ex){
-                Toast.makeText(getBaseContext(),ex.getMessage(),Toast.LENGTH_SHORT).show();
-            }
-            bmp = RotateBitmap(resizeImage(iStream),270);
-            Toast.makeText(getBaseContext(),"Imagen subida exitosamente",Toast.LENGTH_LONG).show();
+            try { iStream = getContentResolver().openInputStream(photoUri); }
+            catch (Exception ex) { Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();}
+            bmp = RotateBitmap(resizeImage(iStream), 270);
+            Toast.makeText(getBaseContext(), "Imagen subida exitosamente", Toast.LENGTH_LONG).show();
             photoImage.setImageBitmap(bmp);
         }
     }
 
-    public Bitmap resizeImage (InputStream is) {
+    public Bitmap resizeImage(InputStream is) {
         BitmapFactory.Options options;
         try {
             options = new BitmapFactory.Options();
             options.inSampleSize = 4; // 1/3 of origin image size from width and height
             Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
             return bitmap;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        } catch (Exception ex) { ex.printStackTrace(); }
         return null;
     }
 
@@ -129,7 +238,7 @@ public class RegisterActivity extends AppCompatActivity {
             }
         }
         CharSequence charSeq = new String("yyyMMddHHmmss");
-        String timeStamp = new DateFormat().format(charSeq,new Date()).toString();
+        String timeStamp = new DateFormat().format(charSeq, new Date()).toString();
         return new File(directory.getPath() + File.separator + "IMG_"
                 + timeStamp + ".jpg");
     }
@@ -159,9 +268,8 @@ public class RegisterActivity extends AppCompatActivity {
             }
         }
     }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-///////// Register methods
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    ////// Register methods
     public void register() {
 
         Log.d(TAG, "Register");
@@ -185,11 +293,11 @@ public class RegisterActivity extends AppCompatActivity {
         new SendPOSTrequest().execute();
 
         imgupload = new ImageUploadHandler();
-        imgupload.setOnVariables(fileUri,bmp);
+        imgupload.setOnVariables(fileUri, bmp);
         imgupload.uploadImage(RegisterActivity.this);
 
-        new android.os.Handler().postDelayed(new Runnable() {
-        // TODO: Implement your own register logic here.
+        new Handler().postDelayed(new Runnable() {
+            // TODO: Implement your own register logic here.
             public void run() {
                 // On complete call either onRegisterSuccess or onRegisterFailed depending on success
                 onRegisterSuccess();
@@ -214,44 +322,84 @@ public class RegisterActivity extends AppCompatActivity {
 
     // Method validates input text on every field.
     public boolean validate() {
-        boolean valid  = true;
-        String fn  = _firstnameText.getText().toString();
-        String ln  = _lastnameText.getText().toString();
-        String em  = _emailText.getText().toString();
+        boolean valid = true;
+        String fn = _firstnameText.getText().toString();
+        String ln = _lastnameText.getText().toString();
+        String em = _emailText.getText().toString();
 
         // check that the field is not empty and is at least three chars.
         if (fn.isEmpty() || fn.length() < 3) {
             _firstnameText.setError("At least 3 characters");
             valid = false;
-        } else { _firstnameText.setError(null); }
+        } else {
+            _firstnameText.setError(null);
+        }
 
         // check that field is not empty and its length is 10
         if (ln.isEmpty() || ln.length() < 3) {
             _lastnameText.setError("At least 3 characters");
             valid = false;
-        } else { _lastnameText.setError(null); }
+        } else {
+            _lastnameText.setError(null);
+        }
 
         // check that field is not empty and its pattern of an email matches.
-        if (em.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(em).matches()) {
+        if (em.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(em).matches()) {
             _emailText.setError("Enter a valid email address");
             valid = false;
-        } else { _emailText.setError(null); }
+        } else {
+            _emailText.setError(null);
+        }
 
         return valid;
     }
 
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("Register Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
+    }
+
     ///////////////////////////////////////////////////////////
     private class SendPOSTrequest extends AsyncTask<String, Void, String> {
-        protected void onPreExecute() {}
-        protected String doInBackground(String...params) {
+        protected void onPreExecute() { }
+        protected String doInBackground(String... params) {
             try {
                 // Create URL and JSON Object
                 //We will use URLconnection for HTTP to send and receive data
                 URL url = new URL("http://planz.omiustech.com/bombaacida.php");
                 JSONObject postDataparams = new JSONObject();
                 postDataparams.put("Firstname", valuesPOST[0]);
-                postDataparams.put("Lastname",  valuesPOST[1]);
-                postDataparams.put("email",  valuesPOST[2]);
+                postDataparams.put("Lastname", valuesPOST[1]);
+                postDataparams.put("email", valuesPOST[2]);
 
                 HttpURLConnection httpclient = (HttpURLConnection) url.openConnection();
                 httpclient.setReadTimeout(15000);
@@ -282,8 +430,12 @@ public class RegisterActivity extends AppCompatActivity {
 
                     in.close();
                     return sb.toString();
-                } else { return new String("false: " + responseCode);}
-            } catch (Exception e) { return new String("Exception: " + e.getMessage()); }
+                } else {
+                    return new String("false: " + responseCode);
+                }
+            } catch (Exception e) {
+                return new String("Exception: " + e.getMessage());
+            }
         }
 
         //Get response
@@ -300,12 +452,12 @@ public class RegisterActivity extends AppCompatActivity {
         boolean first = true;
         Iterator<String> itr = params.keys();
 
-        while (itr.hasNext()){
+        while (itr.hasNext()) {
             String key = itr.next();
             Object value = params.get(key);
 
-            if (first){ first = false;
-            } else { result.append("&");}
+            if (first) { first = false;
+            } else { result.append("&"); }
 
             result.append(URLEncoder.encode(key, "UTF-8"));
             result.append("=");
