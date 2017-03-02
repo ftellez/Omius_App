@@ -26,4 +26,22 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/toolbar" />
+
+    <Button
+        android:text="Stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/Temperature_chart"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="21dp"
+        android:id="@+id/btnStopBluetooth" />
+
+    <Button
+        android:text="Connect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/btnStopBluetooth"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="12dp"
+        android:id="@+id/btnConnectBluetooth" />
 </RelativeLayout>

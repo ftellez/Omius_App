@@ -32,6 +32,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -68,10 +69,11 @@ public class GraphActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBtAdapter;
     private BluetoothSocket btSocket;
-    private BluetoothServerSocket btSocketServer;
     public String BtAddress = null;
     private ConnectedThread mConnectedThread = null;
     final int handlerState = 0;
+    Button stopBluetooth = null;
+    Button connectBluetooth = null;
 
     // UUID service - This is the type of Bluetooth device that the BT module is
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -100,6 +102,7 @@ public class GraphActivity extends AppCompatActivity {
     public ArrayList<Float> PointsTemp = new ArrayList<Float>();
     public ArrayList<Float> PointsHum = new ArrayList<Float>();
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,8 +110,15 @@ public class GraphActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 //        graph = (GraphView) findViewById(R.id.graph);
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        stopBluetooth = (Button) findViewById(R.id.btnStopBluetooth);
+        connectBluetooth = (Button) findViewById(R.id.btnConnectBluetooth);
+
+        stopBluetooth.setEnabled(false);
 
         final LineChart chart = (LineChart) findViewById(R.id.Temperature_chart);
+        Points.clear();
+        PointsTemp.clear();
+        PointsHum.clear();
 
 //        graph.addSeries(series);
 
@@ -238,6 +248,29 @@ public class GraphActivity extends AppCompatActivity {
                 }
             }
         };
+
+        stopBluetooth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    mConnectedThread.mmInStream.close();
+                    mConnectedThread.mmOutStream.close();
+                    mConnectedThread.running = false;
+                    btSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                new SendPOSTrequest().execute();
+            }
+        });
+
+        connectBluetooth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ConnectDeviceBluetooth();
+            }
+        });
     }
 
     public void RefreshGraph(LineChart chart) {
@@ -281,13 +314,13 @@ public class GraphActivity extends AppCompatActivity {
         charts.invalidate(); // refresh
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (btSocket == null) {
-            ConnectDeviceBluetooth();
-        }
-    }
+    //@Override
+//    public void onResume() {
+//        super.onResume();
+//        if (btSocket == null) {
+//            ConnectDeviceBluetooth();
+//        }
+//    }
 
     public void ConnectDeviceBluetooth() {
         //It is best to check BT status at onResume in case something has changed while app was paused etc
@@ -367,6 +400,7 @@ public class GraphActivity extends AppCompatActivity {
             mConnectedThread.start();
         }
 
+        stopBluetooth.setEnabled(true);
 
         //I send a character when resuming.beginning transmission to check device is connected
         //If it is not an exception will be thrown in the write method and finish() will be called
@@ -404,6 +438,7 @@ public class GraphActivity extends AppCompatActivity {
     private class ConnectedThread extends Thread {
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
+        volatile boolean running = true;
 
         //creation of the connect thread
         public ConnectedThread(BluetoothSocket ArrivingSocket) {
@@ -428,13 +463,23 @@ public class GraphActivity extends AppCompatActivity {
 
             // Keep looping to listen for received messages
             while (true) {
+                if (!running){
+                    try {
+                        mmInStream.close();
+                        mmOutStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return;
+                }
                 try {
                     bytes = mmInStream.read(buffer);            //read bytes from input buffer
                     String readMessage = new String(buffer, 0, bytes);
                     // Send the obtained bytes to the UI Activity via handler
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
                 } catch (Exception e) {
-                    break;
+                    //break;
+                    e.printStackTrace();
                 }
             }
         }
@@ -460,13 +505,19 @@ public class GraphActivity extends AppCompatActivity {
                 //We will use URLconnection for HTTP to send and receive data
                 URL url = new URL("http://planz.omiustech.com/bombaacida.php");
                 JSONObject postDataparams = new JSONObject();
-                postDataparams.put("Firstname", valuesPOST[0]);
-                postDataparams.put("Lastname",  valuesPOST[1]);
-                postDataparams.put("email",  valuesPOST[2]);
+                postDataparams.put("Tipo", "log");
+                for(int i = 0; i < Points.size(); i = i + 2){
+                    postDataparams.put("Tiempo" + i, Points.get(i));
+                    postDataparams.put("Voltaje" + i, Points.get(i + 1) );
+                    postDataparams.put("Temperatura" + i,  PointsTemp.get(i + 1));
+                    postDataparams.put("Humedad" + i, PointsHum.get(i + 1));
+                }
 
                 HttpURLConnection httpclient = (HttpURLConnection) url.openConnection();
                 httpclient.setReadTimeout(15000);
                 httpclient.setConnectTimeout(15000);
+                httpclient.setRequestProperty("Content-Type", "application/json");
+                httpclient.setRequestProperty("Accept", "application/json");
                 httpclient.setRequestMethod("POST");
                 httpclient.setDoOutput(true);
                 httpclient.setDoInput(true);
@@ -475,7 +526,7 @@ public class GraphActivity extends AppCompatActivity {
                 OutputStream os = httpclient.getOutputStream();
                 BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(os, "UTF-8"));
-                writer.write(getPostDataString(postDataparams));
+                writer.write(postDataparams.toString());
                 writer.flush();
                 writer.close();
                 os.close();
