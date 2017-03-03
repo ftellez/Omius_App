@@ -387,6 +387,8 @@ public class RegisterActivity extends AppCompatActivity {
                 HttpURLConnection httpclient = (HttpURLConnection) url.openConnection();
                 httpclient.setReadTimeout(15000);
                 httpclient.setConnectTimeout(15000);
+                httpclient.setRequestProperty("Content-Type", "application/json");
+                httpclient.setRequestProperty("Accept", "application/json");
                 httpclient.setRequestMethod("POST");
                 httpclient.setDoOutput(true);
                 httpclient.setDoInput(true);
@@ -395,7 +397,7 @@ public class RegisterActivity extends AppCompatActivity {
                 OutputStream os = httpclient.getOutputStream();
                 BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(os, "UTF-8"));
-                writer.write(getPostDataString(postDataparams));
+                writer.write(postDataparams.toString());
                 writer.flush();
                 writer.close();
                 os.close();
