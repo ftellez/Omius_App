@@ -65,25 +65,20 @@ import butterknife.ButterKnife;
 public class RegisterActivity extends AppCompatActivity {
     //Register
     private static final String TAG = "RegisterActivity";
-    @Bind(R.id.input_firstname)
-    EditText _firstnameText;
-    @Bind(R.id.input_lastname)
-    EditText _lastnameText;
-    @Bind(R.id.input_email)
-    EditText _emailText;
-    @Bind(R.id.btn_register)
-    Button _registerButton;
+    @Bind(R.id.input_firstname) EditText _firstnameText;
+    @Bind(R.id.input_lastname) EditText _lastnameText;
+    @Bind(R.id.input_email) EditText _emailText;
+    @Bind(R.id.btn_register) Button _registerButton;
     String[] valuesPOST = new String[3];
 
     //Camera  private static final String TAG = "CallCamera";
     public static final int REQUEST_MULTIPLE_PERMISSIONS = 1;
-    private View view;
     private static final int CAPTURE_IMAGE_ACTIVITY_REQ = 0;
     Uri fileUri = null;
     ImageView photoImage = null;
     ImageUploadHandler imgupload;
     Bitmap bmp;
-
+    Uri photoUri = null;
     private GoogleApiClient client;
 
     @Override
@@ -94,15 +89,12 @@ public class RegisterActivity extends AppCompatActivity {
         photoImage = (ImageView) findViewById(R.id.photo_image);
         ImageButton callCameraButton = (ImageButton) findViewById(R.id.button_callcamera);
 
-        if (checkPermissionsAndRequest()) {
-
-        }
+        if (checkPermissionsAndRequest()) { }
 
         callCameraButton.setOnClickListener(new View.OnClickListener() {
-            @Override   // Check if this works
+            @Override
             public void onClick(View view) {
                 Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                //File file = getOutputPhotoFile();
                 fileUri = Uri.fromFile(getOutputPhotoFile());
                 i.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
                 startActivityForResult(i, CAPTURE_IMAGE_ACTIVITY_REQ);
@@ -113,25 +105,17 @@ public class RegisterActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) { register(); }
             });
-            // ATTENTION: This was auto-generated to implement the App Indexing API.
-            // See https://g.co/AppIndexing/AndroidStudio for more information.
+
             client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
         }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    // Camera methods
+    // Permission Request
     private boolean checkPermissionsAndRequest() {
-        int permissionCamera = ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.CAMERA);
-        int permissionStorage = ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int permissionCamera = ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA);
+        int permissionStorage = ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
         List<String> listPermissions = new ArrayList<>();
-        if (permissionStorage != PackageManager.PERMISSION_GRANTED) {
-            listPermissions.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        }
-        if (permissionCamera != PackageManager.PERMISSION_GRANTED) {
-            listPermissions.add(android.Manifest.permission.CAMERA);
-        }
+        if (permissionStorage != PackageManager.PERMISSION_GRANTED) {listPermissions.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);}
+        if (permissionCamera != PackageManager.PERMISSION_GRANTED) {listPermissions.add(android.Manifest.permission.CAMERA);}
         if (!listPermissions.isEmpty()){
             ActivityCompat.requestPermissions(this, listPermissions.toArray(new String[listPermissions.size()]),REQUEST_MULTIPLE_PERMISSIONS);
             return false;
@@ -167,8 +151,7 @@ public class RegisterActivity extends AppCompatActivity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             switch (which) {
-                                                case DialogInterface.BUTTON_POSITIVE:
-                                                    checkPermissionsAndRequest();
+                                                case DialogInterface.BUTTON_POSITIVE: checkPermissionsAndRequest();
                                                     break;
                                                 case DialogInterface.BUTTON_NEGATIVE:
                                                     // proceed with logic by disabling the related features or quit the app.
@@ -198,6 +181,8 @@ public class RegisterActivity extends AppCompatActivity {
                 .show();
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Camera methods
     private void showPhoto(Uri photoUri) {
         File imageFile = new File(photoUri.getPath().toString()); //photoUri.getPath().toString()
         InputStream iStream = null;
@@ -227,7 +212,6 @@ public class RegisterActivity extends AppCompatActivity {
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
-
     private File getOutputPhotoFile() {
         File directory = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), getPackageName());
@@ -246,7 +230,6 @@ public class RegisterActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQ) {
             if (resultCode == RESULT_OK) {
-                Uri photoUri = null;
                 if (data == null) {
                     // A known bug here! The image should have saved in fileUri
                     Toast.makeText(this, "Image loaded successfully",
@@ -351,13 +334,14 @@ public class RegisterActivity extends AppCompatActivity {
             _emailText.setError(null);
         }
 
+        if (photoUri == null) {
+            Toast.makeText(getBaseContext(), "Must add an image", Toast.LENGTH_LONG).show();
+            valid = false;
+        }
+
         return valid;
     }
 
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
     public Action getIndexApiAction() {
         Thing object = new Thing.Builder()
                 .setName("Register Page") // TODO: Define a title for the content shown.
@@ -373,8 +357,6 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
         client.connect();
         AppIndex.AppIndexApi.start(client, getIndexApiAction());
     }
@@ -388,7 +370,8 @@ public class RegisterActivity extends AppCompatActivity {
         client.disconnect();
     }
 
-    ///////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // HTTP methods
     private class SendPOSTrequest extends AsyncTask<String, Void, String> {
         protected void onPreExecute() { }
         protected String doInBackground(String... params) {

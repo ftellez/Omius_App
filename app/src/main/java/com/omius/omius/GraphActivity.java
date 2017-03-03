@@ -345,7 +345,6 @@ public class GraphActivity extends AppCompatActivity {
 
     public void ConnectSocket(BluetoothSocket BtSocket) {
         // Establish the connection.
-
         try {
             Toast.makeText(getBaseContext(), "Conectando....", Toast.LENGTH_SHORT).show();
             BtSocket.connect();

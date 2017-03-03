@@ -16,25 +16,24 @@
         android:weightSum="1">
 
         <ImageView
-            android:layout_width="151dp"
+            android:layout_width="126dp"
             app:srcCompat="@mipmap/blankprofilehi"
             android:layout_gravity="center_horizontal"
-            android:layout_weight="0.09"
             android:scaleType="centerInside"
             android:adjustViewBounds="true"
-            android:layout_height="150dp"
+            android:layout_height="97dp"
             android:padding="1dp"
             android:background="#000000"
             android:id="@+id/photo_image">
         </ImageView>
 
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:srcCompat="@mipmap/ic_camera"
+            android:layout_width="35dp"
+            android:layout_height="32dp"
+            app:srcCompat="@drawable/ic_add_a_photo"
             android:id="@+id/button_callcamera"
             android:adjustViewBounds="true"
-            android:layout_gravity="center_horizontal"/>
+            android:layout_gravity="right" />
 
         <!-- Name Label -->
         <android.support.design.widget.TextInputLayout
