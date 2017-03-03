@@ -70,7 +70,7 @@ public class GraphActivity extends AppCompatActivity {
     private BluetoothAdapter mBtAdapter;
     private BluetoothSocket btSocket;
     public String BtAddress = null;
-    private ConnectedThread mConnectedThread = null;
+    public ConnectedThread mConnectedThread = null;
     final int handlerState = 0;
     Button stopBluetooth = null;
     Button connectBluetooth = null;
@@ -88,6 +88,7 @@ public class GraphActivity extends AppCompatActivity {
 
     String eraseSub;
     int lineEnding;
+    boolean isGraphEnabled = true;
 
 //    DataPoint[] dataBattery = new DataPoint[]{new DataPoint(0, 0)};
 //    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(dataBattery);
@@ -119,6 +120,10 @@ public class GraphActivity extends AppCompatActivity {
         Points.clear();
         PointsTemp.clear();
         PointsHum.clear();
+
+        //It is best to check BT status at onResume in case something has changed while app was paused etc
+        checkBTState();
+
 
 //        graph.addSeries(series);
 
@@ -239,7 +244,9 @@ public class GraphActivity extends AppCompatActivity {
                                         coordtemp = null;
                                         coordhum = null;
 
-                                        RefreshGraph(chart);
+                                        if (isGraphEnabled){
+                                            RefreshGraph(chart);
+                                        }
                                     }
                                 }
                             }
@@ -261,6 +268,7 @@ public class GraphActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
+                isGraphEnabled = false;
                 new SendPOSTrequest().execute();
             }
         });
@@ -268,32 +276,51 @@ public class GraphActivity extends AppCompatActivity {
         connectBluetooth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                try{
+                    if (mConnectedThread != null){
+                        mConnectedThread.mmInStream.close();
+                        mConnectedThread.mmOutStream.close();
+                        mConnectedThread.running = false;
+                        mConnectedThread = null;
+                        btSocket.close();
+                    }
+                } catch (Exception ex){
+                    ex.printStackTrace();
+                }
+                graphPoints = 0;
+                Points.clear();
+                PointsTemp.clear();
+                PointsHum.clear();
+                isGraphEnabled = true;
                 ConnectDeviceBluetooth();
+                stopBluetooth.setEnabled(true);
             }
         });
     }
 
     public void RefreshGraph(LineChart chart) {
-        entries.add(new Entry(Points.get(graphPoints),Points.get(graphPoints+1)));
-        entriesTemp.add(new Entry(PointsTemp.get(graphPoints),PointsTemp.get(graphPoints+1)));
-        entriesHum.add(new Entry(PointsHum.get(graphPoints),PointsHum.get(graphPoints+1)));
-        LineDataSet datasetVolt = new LineDataSet(entries,"Voltaje");
-        datasetVolt.setColor(Color.BLUE);
-        datasetVolt.setCircleColor(Color.BLUE);
-        LineDataSet datasetTemp = new LineDataSet(entriesTemp,"Temperatura");
-        datasetTemp.setColor(Color.CYAN);
-        datasetTemp.setCircleColor(Color.CYAN);
-        LineDataSet datasetHum = new LineDataSet(entriesHum,"Humedad");
-        datasetHum.setColor(Color.MAGENTA);
-        datasetHum.setCircleColor(Color.MAGENTA);
-        List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
-        dataset.add(datasetVolt);
-        dataset.add(datasetTemp);
-        dataset.add(datasetHum);
-        LineData lineData = new LineData(dataset);
-        chart.setData(lineData);
-        setChartOptions(chart);
-        graphPoints = graphPoints + 2;
+        if (isGraphEnabled) {
+            entries.add(new Entry(Points.get(graphPoints), Points.get(graphPoints + 1)));
+            entriesTemp.add(new Entry(PointsTemp.get(graphPoints), PointsTemp.get(graphPoints + 1)));
+            entriesHum.add(new Entry(PointsHum.get(graphPoints), PointsHum.get(graphPoints + 1)));
+            LineDataSet datasetVolt = new LineDataSet(entries, "Voltaje");
+            datasetVolt.setColor(Color.BLUE);
+            datasetVolt.setCircleColor(Color.BLUE);
+            LineDataSet datasetTemp = new LineDataSet(entriesTemp, "Temperatura");
+            datasetTemp.setColor(Color.CYAN);
+            datasetTemp.setCircleColor(Color.CYAN);
+            LineDataSet datasetHum = new LineDataSet(entriesHum, "Humedad");
+            datasetHum.setColor(Color.MAGENTA);
+            datasetHum.setCircleColor(Color.MAGENTA);
+            List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
+            dataset.add(datasetVolt);
+            dataset.add(datasetTemp);
+            dataset.add(datasetHum);
+            LineData lineData = new LineData(dataset);
+            chart.setData(lineData);
+            setChartOptions(chart);
+            graphPoints = graphPoints + 2;
+        }
     }
 
     public void setChartOptions(LineChart charts){
@@ -314,18 +341,14 @@ public class GraphActivity extends AppCompatActivity {
         charts.invalidate(); // refresh
     }
 
-    //@Override
-//    public void onResume() {
-//        super.onResume();
-//        if (btSocket == null) {
-//            ConnectDeviceBluetooth();
-//        }
-//    }
-
-    public void ConnectDeviceBluetooth() {
+    @Override
+    public void onResume() {
+        super.onResume();
         //It is best to check BT status at onResume in case something has changed while app was paused etc
         checkBTState();
+    }
 
+    public void ConnectDeviceBluetooth() {
         // Get a set of currently paired devices and append to pairedDevices list
         Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
 
@@ -396,11 +419,10 @@ public class GraphActivity extends AppCompatActivity {
         //When activity is resumed, attempt to send a piece of junk data ('x') so that it will fail if not connected
         // i.e don't wait for a user to press button to recognise connection failure
         if (mConnectedThread == null) {
+            mConnectedThread = null;
             mConnectedThread = new ConnectedThread(btSocket);
             mConnectedThread.start();
         }
-
-        stopBluetooth.setEnabled(true);
 
         //I send a character when resuming.beginning transmission to check device is connected
         //If it is not an exception will be thrown in the write method and finish() will be called
@@ -506,11 +528,11 @@ public class GraphActivity extends AppCompatActivity {
                 URL url = new URL("http://planz.omiustech.com/bombaacida.php");
                 JSONObject postDataparams = new JSONObject();
                 postDataparams.put("Tipo", "log");
-                for(int i = 0; i < Points.size(); i = i + 2){
-                    postDataparams.put("Tiempo" + i, Points.get(i));
-                    postDataparams.put("Voltaje" + i, Points.get(i + 1) );
-                    postDataparams.put("Temperatura" + i,  PointsTemp.get(i + 1));
-                    postDataparams.put("Humedad" + i, PointsHum.get(i + 1));
+                for(int i = 0; i < PointsHum.size(); i = i + 2){
+                    postDataparams.put("Tiempo" + i/2, Points.get(i));
+                    postDataparams.put("Voltaje" + i/2, Points.get(i + 1) );
+                    postDataparams.put("Temperatura" + i/2,  PointsTemp.get(i + 1));
+                    postDataparams.put("Humedad" + i/2, PointsHum.get(i + 1));
                 }
 
                 HttpURLConnection httpclient = (HttpURLConnection) url.openConnection();
@@ -539,7 +561,7 @@ public class GraphActivity extends AppCompatActivity {
 
                     while ((line = in.readLine()) != null) {
                         sb.append(line);
-                        break;
+                        //break;
                     }
 
                     in.close();
