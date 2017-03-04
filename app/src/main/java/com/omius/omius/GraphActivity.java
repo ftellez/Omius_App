@@ -21,7 +21,10 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -103,6 +106,7 @@ public class GraphActivity extends AppCompatActivity {
     public ArrayList<Float> PointsTemp = new ArrayList<Float>();
     public ArrayList<Float> PointsHum = new ArrayList<Float>();
 
+    public LineChart chart = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +120,7 @@ public class GraphActivity extends AppCompatActivity {
 
         stopBluetooth.setEnabled(false);
 
-        final LineChart chart = (LineChart) findViewById(R.id.Temperature_chart);
+        chart = (LineChart) findViewById(R.id.Temperature_chart);
         Points.clear();
         PointsTemp.clear();
         PointsHum.clear();
@@ -243,7 +247,7 @@ public class GraphActivity extends AppCompatActivity {
                                         coordhum = null;
 
                                         if (isGraphEnabled){
-                                            RefreshGraph(chart);
+                                            RefreshGraph();
                                         }
                                     }
                                 }
@@ -289,6 +293,8 @@ public class GraphActivity extends AppCompatActivity {
                 Points.clear();
                 PointsTemp.clear();
                 PointsHum.clear();
+                chart.clearValues();
+                //chart.invalidate();
                 isGraphEnabled = true;
                 ConnectDeviceBluetooth();
                 stopBluetooth.setEnabled(true);
@@ -296,7 +302,7 @@ public class GraphActivity extends AppCompatActivity {
         });
     }
 
-    public void RefreshGraph(LineChart chart) {
+    public void RefreshGraph() {
         if (isGraphEnabled) {
             entries.add(new Entry(Points.get(graphPoints), Points.get(graphPoints + 1)));
             entriesTemp.add(new Entry(PointsTemp.get(graphPoints), PointsTemp.get(graphPoints + 1)));
@@ -316,27 +322,44 @@ public class GraphActivity extends AppCompatActivity {
             dataset.add(datasetHum);
             LineData lineData = new LineData(dataset);
             chart.setData(lineData);
-            setChartOptions(chart);
+            setChartOptions();
             graphPoints = graphPoints + 2;
         }
     }
 
-    public void setChartOptions(LineChart charts){
+    public Bitmap resizeImage(InputStream is) {
+        BitmapFactory.Options options;
+        try {
+            options = new BitmapFactory.Options();
+            options.inSampleSize = 4; // 1/3 of origin image size from width and height
+            Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
+            return bitmap;
+        } catch (Exception ex) { ex.printStackTrace(); }
+        return null;
+    }
+
+    public static Bitmap RotateBitmap(Bitmap source, float angle) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+    }
+
+    public void setChartOptions(){
         Description desc = new Description();
         desc.setText("® Omius, 2017.");
         desc.setTextColor(Color.WHITE);
-        Legend legend = charts.getLegend();
+        Legend legend = chart.getLegend();
         legend.setTextColor(Color.WHITE);
-        charts.setVisibleXRangeMinimum(0.00f);
-        charts.setVisibleXRangeMaximum(30.0f);
-        XAxis xaxis = charts.getXAxis();
-        YAxis leftyaxis = charts.getAxisLeft();
-        YAxis rightyaxis = charts.getAxisRight();
+        chart.setVisibleXRangeMinimum(0.00f);
+        chart.setVisibleXRangeMaximum(30.0f);
+        XAxis xaxis = chart.getXAxis();
+        YAxis leftyaxis = chart.getAxisLeft();
+        YAxis rightyaxis = chart.getAxisRight();
         leftyaxis.setTextColor(Color.WHITE);
         rightyaxis.setTextColor(Color.WHITE);
         xaxis.setTextColor(Color.WHITE);
-        charts.setDescription(desc);
-        charts.invalidate(); // refresh
+        chart.setDescription(desc);
+        chart.invalidate(); // refresh
     }
 
     @Override

@@ -190,7 +190,7 @@ public class RegisterActivity extends AppCompatActivity {
             try { iStream = getContentResolver().openInputStream(photoUri); }
             catch (Exception ex) { Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();}
             bmp = RotateBitmap(resizeImage(iStream), 270);
-            Toast.makeText(getBaseContext(), "Imagen subida exitosamente", Toast.LENGTH_LONG).show();
+            //Toast.makeText(getBaseContext(), "Imagen subida exitosamente", Toast.LENGTH_LONG).show();
             photoImage.setImageBitmap(bmp);
         }
     }
@@ -276,7 +276,7 @@ public class RegisterActivity extends AppCompatActivity {
         new SendPOSTrequest().execute();
 
         imgupload = new ImageUploadHandler();
-        imgupload.setOnVariables(fileUri, bmp);
+        imgupload.setOnVariables(fileUri, bmp, null);
         imgupload.uploadImage(RegisterActivity.this);
 
         new Handler().postDelayed(new Runnable() {
