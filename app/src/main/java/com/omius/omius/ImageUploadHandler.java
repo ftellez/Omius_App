@@ -45,11 +45,9 @@ public class ImageUploadHandler extends AppCompatActivity{
 
     private int PICK_IMAGE_REQUEST = 1;
 
-    //private ImageView imageView;
     private Bitmap bitmap;
     private Uri filePath;
-    //private Context context;
-    //private Activity actDB;
+    private String UploadKey;
 
     public ImageUploadHandler(){
         this.filePath = null;
@@ -65,9 +63,10 @@ public class ImageUploadHandler extends AppCompatActivity{
 //        db.startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
 //    }
 
-    public void setOnVariables(Uri filepath, Bitmap bmp){
+    public void setOnVariables(Uri filepath, Bitmap bmp, String Key){
         this.filePath = filepath;
         this.bitmap = bmp;
+        this.UploadKey = Key;
     }
 
     public String getStringImage(Bitmap bmp){
@@ -78,7 +77,7 @@ public class ImageUploadHandler extends AppCompatActivity{
     }
 
     public void uploadImage(Activity db){
-        class UploadImage extends AsyncTask<Bitmap,Void,String> {
+        class UploadImage extends AsyncTask<Object,Void,String> {
             RequestHandler rh = new RequestHandler();
             Activity db;
 
@@ -96,13 +95,19 @@ public class ImageUploadHandler extends AppCompatActivity{
             }
 
             @Override
-            protected String doInBackground(Bitmap... params) {
+            protected String doInBackground(Object... params) {
                 //android.os.Debug.waitForDebugger();
-                Bitmap bitmap = params[0];
+                Bitmap bitmap = (Bitmap) params[0];
+                String uploadkey = (String) params[1];
                 String uploadImage = getStringImage(bitmap);
 
                 HashMap<String,String> data = new HashMap<>();
-                data.put(UPLOAD_KEY, uploadImage);
+
+                if(uploadkey == null){
+                    data.put(UPLOAD_KEY, uploadImage);
+                } else if(uploadkey == "graph"){
+                    data.put(uploadkey, uploadImage);
+                }
 
                 String result = rh.sendPostRequest(UPLOAD_URL,data);
 
@@ -111,7 +116,7 @@ public class ImageUploadHandler extends AppCompatActivity{
         }
 
         UploadImage ui = new UploadImage(db);
-        ui.execute(bitmap);
+        ui.execute(bitmap, UploadKey);
     }
 
     public class RequestHandler{

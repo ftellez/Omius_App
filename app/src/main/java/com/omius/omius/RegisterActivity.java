@@ -274,7 +274,7 @@ public class RegisterActivity extends AppCompatActivity {
         new SendPOSTrequest().execute();
 
         imgupload = new ImageUploadHandler();
-        imgupload.setOnVariables(fileUri, bmp);
+        imgupload.setOnVariables(fileUri, bmp, null);
         imgupload.uploadImage(RegisterActivity.this);
 
         new Handler().postDelayed(new Runnable() {
