@@ -190,7 +190,7 @@ public class RegisterActivity extends AppCompatActivity {
             try { iStream = getContentResolver().openInputStream(photoUri); }
             catch (Exception ex) { Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();}
             bmp = RotateBitmap(resizeImage(iStream), 270);
-            Toast.makeText(getBaseContext(), "Imagen subida exitosamente", Toast.LENGTH_LONG).show();
+            //Toast.makeText(getBaseContext(), "Imagen subida exitosamente", Toast.LENGTH_LONG).show();
             photoImage.setImageBitmap(bmp);
         }
     }
@@ -232,14 +232,12 @@ public class RegisterActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 if (data == null) {
                     // A known bug here! The image should have saved in fileUri
-                    Toast.makeText(this, "Image loaded successfully",
-                            Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this, "Image loaded successfully", Toast.LENGTH_SHORT).show();
                     photoUri = fileUri;
                     showPhoto(photoUri);
                 } else {
                     photoUri = data.getData();
-                    Toast.makeText(this, "Image loaded successfully in: " + data.getData(),
-                            Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this, "Image loaded successfully in: " + data.getData(), Toast.LENGTH_SHORT).show();
                     showPhoto(photoUri);
                 }
                 // showPhoto(photoUri);
