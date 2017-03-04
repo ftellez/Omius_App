@@ -8,7 +8,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.omius.omius.MainActivity">
+    tools:context="com.omius.omius.GraphActivity">
 
     <android.support.v7.widget.Toolbar
         android:layout_width="match_parent"
@@ -44,4 +44,12 @@
         android:layout_alignParentStart="true"
         android:layout_marginStart="12dp"
         android:id="@+id/btnConnectBluetooth" />
+
+    <Button
+        android:text="Save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/btnSaveImage"
+        android:layout_above="@+id/Temperature_chart"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

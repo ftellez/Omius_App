@@ -189,7 +189,7 @@ public class SignUpActivity extends AppCompatActivity {
         // TODO: Implement your own signup logic here.
 
         imgupload = new ImageUploadHandler();
-        imgupload.setOnVariables(fileUri,bmp);
+        imgupload.setOnVariables(fileUri,bmp, null);
         imgupload.uploadImage(SignUpActivity.this);
 
         new android.os.Handler().postDelayed(

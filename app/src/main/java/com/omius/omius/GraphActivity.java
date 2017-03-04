@@ -27,15 +27,18 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -54,6 +57,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -63,6 +67,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -77,6 +82,7 @@ public class GraphActivity extends AppCompatActivity {
     final int handlerState = 0;
     Button stopBluetooth = null;
     Button connectBluetooth = null;
+    Button saveImage = null;
 
     // UUID service - This is the type of Bluetooth device that the BT module is
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -117,6 +123,8 @@ public class GraphActivity extends AppCompatActivity {
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         stopBluetooth = (Button) findViewById(R.id.btnStopBluetooth);
         connectBluetooth = (Button) findViewById(R.id.btnConnectBluetooth);
+        saveImage = (Button) findViewById(R.id.btnSaveImage);
+
 
         stopBluetooth.setEnabled(false);
 
@@ -130,7 +138,6 @@ public class GraphActivity extends AppCompatActivity {
 
 
 //        graph.addSeries(series);
-
         bluetoothIn = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 if (msg.what == handlerState) {                                     //if message is what we want
@@ -269,9 +276,27 @@ public class GraphActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
+                //bluetoothIn.removeMessages(0);
                 isGraphEnabled = false;
                 new SendPOSTrequest().execute();
+
+            }
+        });
+
+        saveImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CharSequence charSequence = new String ("yyyMMddHHmmss");
+                String timeStamp = new DateFormat().format(charSequence, new Date()).toString();
+                String graphTitle = "IMG_" + timeStamp;
+                chart.saveToGallery(graphTitle, 30);
+                File root = Environment.getExternalStorageDirectory();
+                String imgbmp = root + "/DCIM/" + graphTitle + ".jpg";
+                Bitmap bMap = BitmapFactory.decodeFile(imgbmp);
+                ImageUploadHandler imgUpload = new ImageUploadHandler();
+                imgUpload.setOnVariables(null, bMap, "graph");
+                imgUpload.uploadImage(GraphActivity.this);
+                Toast.makeText(getApplicationContext(), "Graph image uploaded", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -289,11 +314,12 @@ public class GraphActivity extends AppCompatActivity {
                 } catch (Exception ex){
                     ex.printStackTrace();
                 }
+                bluetoothIn.removeMessages(0);
                 graphPoints = 0;
                 Points.clear();
                 PointsTemp.clear();
                 PointsHum.clear();
-                chart.clearValues();
+                //chart.clearValues();
                 //chart.invalidate();
                 isGraphEnabled = true;
                 ConnectDeviceBluetooth();
