@@ -424,8 +424,8 @@ public class RegisterActivity extends AppCompatActivity {
         //Get response
         @Override
         protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Registro logrado.", Toast.LENGTH_LONG).show();
         }
     }
 

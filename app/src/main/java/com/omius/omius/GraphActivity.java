@@ -15,10 +15,13 @@
 //}
 package com.omius.omius;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -98,6 +101,7 @@ public class GraphActivity extends AppCompatActivity {
     String eraseSub;
     int lineEnding;
     boolean isGraphEnabled = true;
+    boolean isBTAdaptSelected = false;
 
 //    DataPoint[] dataBattery = new DataPoint[]{new DataPoint(0, 0)};
 //    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(dataBattery);
@@ -127,6 +131,7 @@ public class GraphActivity extends AppCompatActivity {
 
 
         stopBluetooth.setEnabled(false);
+        saveImage.setEnabled(false);
 
         chart = (LineChart) findViewById(R.id.Temperature_chart);
         Points.clear();
@@ -279,6 +284,7 @@ public class GraphActivity extends AppCompatActivity {
                 //bluetoothIn.removeMessages(0);
                 isGraphEnabled = false;
                 new SendPOSTrequest().execute();
+                saveImage.setEnabled(true);
 
             }
         });
@@ -297,6 +303,7 @@ public class GraphActivity extends AppCompatActivity {
                 imgUpload.setOnVariables(null, bMap, "graph");
                 imgUpload.uploadImage(GraphActivity.this);
                 Toast.makeText(getApplicationContext(), "Graph image uploaded", Toast.LENGTH_SHORT).show();
+                RestartApp();
             }
         });
 
@@ -323,7 +330,7 @@ public class GraphActivity extends AppCompatActivity {
                 //chart.invalidate();
                 isGraphEnabled = true;
                 ConnectDeviceBluetooth();
-                stopBluetooth.setEnabled(true);
+                if (isBTAdaptSelected){ stopBluetooth.setEnabled(true); }
             }
         });
     }
@@ -333,13 +340,13 @@ public class GraphActivity extends AppCompatActivity {
             entries.add(new Entry(Points.get(graphPoints), Points.get(graphPoints + 1)));
             entriesTemp.add(new Entry(PointsTemp.get(graphPoints), PointsTemp.get(graphPoints + 1)));
             entriesHum.add(new Entry(PointsHum.get(graphPoints), PointsHum.get(graphPoints + 1)));
-            LineDataSet datasetVolt = new LineDataSet(entries, "Voltaje");
+            LineDataSet datasetVolt = new LineDataSet(entries, "Velocidad");
             datasetVolt.setColor(Color.BLUE);
             datasetVolt.setCircleColor(Color.BLUE);
-            LineDataSet datasetTemp = new LineDataSet(entriesTemp, "Temperatura");
+            LineDataSet datasetTemp = new LineDataSet(entriesTemp, "Temperatura Corporal");
             datasetTemp.setColor(Color.CYAN);
             datasetTemp.setCircleColor(Color.CYAN);
-            LineDataSet datasetHum = new LineDataSet(entriesHum, "Humedad");
+            LineDataSet datasetHum = new LineDataSet(entriesHum, "Temperatura Peltier");
             datasetHum.setColor(Color.MAGENTA);
             datasetHum.setCircleColor(Color.MAGENTA);
             List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
@@ -386,6 +393,15 @@ public class GraphActivity extends AppCompatActivity {
         xaxis.setTextColor(Color.WHITE);
         chart.setDescription(desc);
         chart.invalidate(); // refresh
+    }
+
+    public void RestartApp(){
+        Intent mStartActivity = new Intent(this, RegisterActivity.class);
+        int mPendingIntentId = 123456;
+        PendingIntent mPendingIntent = PendingIntent.getActivity(this, mPendingIntentId, mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+        AlarmManager mgr = (AlarmManager)this.getSystemService(Context.ALARM_SERVICE);
+        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+        android.os.Process.killProcess(android.os.Process.myPid()); //System.exit(0);
     }
 
     @Override
@@ -439,6 +455,7 @@ public class GraphActivity extends AppCompatActivity {
                     }
 
                     ConnectSocket(btSocket);
+                    isBTAdaptSelected = true;
 
                     dialog.dismiss();
                 }
