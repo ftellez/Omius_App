@@ -16,8 +16,8 @@
         android:weightSum="1">
 
         <android.support.v7.widget.CardView
-            android:layout_width="89dp"
-            android:layout_height="84dp"
+            android:layout_width="90dp"
+            android:layout_height="87dp"
             android:elevation="10dp"
             app:cardCornerRadius="45dp"
             android:innerRadius="0dp"
@@ -26,18 +26,19 @@
             app:cardElevation="6dp">
 
             <ImageView
-                android:layout_width="129dp"
-                app:srcCompat="@drawable/ch"
-                android:layout_gravity="center_horizontal"
-                android:scaleType="fitCenter"
+                android:layout_width="81dp"
+                app:srcCompat="@drawable/chicken"
+                android:layout_gravity="center"
                 android:adjustViewBounds="false"
-                android:layout_height="104dp"
+                android:layout_height="80dp"
                 android:padding="1dp"
                 android:background="#000000"
                 android:id="@+id/photo_image"
                 android:layout_weight="0.15">
             </ImageView>
         </android.support.v7.widget.CardView>
+        <!--android:scaleType="fitCenter"-->
+        <!--119 109 -->
 
         <ImageButton
             android:layout_width="35dp"

@@ -330,7 +330,7 @@ public class GraphActivity extends AppCompatActivity {
                 //chart.invalidate();
                 isGraphEnabled = true;
                 ConnectDeviceBluetooth();
-                if (isBTAdaptSelected){ stopBluetooth.setEnabled(true); }
+                stopBluetooth.setEnabled(true);
             }
         });
     }
@@ -340,19 +340,19 @@ public class GraphActivity extends AppCompatActivity {
             entries.add(new Entry(Points.get(graphPoints), Points.get(graphPoints + 1)));
             entriesTemp.add(new Entry(PointsTemp.get(graphPoints), PointsTemp.get(graphPoints + 1)));
             entriesHum.add(new Entry(PointsHum.get(graphPoints), PointsHum.get(graphPoints + 1)));
-            LineDataSet datasetVolt = new LineDataSet(entries, "Velocidad");
-            datasetVolt.setColor(Color.BLUE);
-            datasetVolt.setCircleColor(Color.BLUE);
-            LineDataSet datasetTemp = new LineDataSet(entriesTemp, "Temperatura Corporal");
-            datasetTemp.setColor(Color.CYAN);
-            datasetTemp.setCircleColor(Color.CYAN);
-            LineDataSet datasetHum = new LineDataSet(entriesHum, "Temperatura Peltier");
-            datasetHum.setColor(Color.MAGENTA);
-            datasetHum.setCircleColor(Color.MAGENTA);
+            LineDataSet datasetVel = new LineDataSet(entries, "Velocidad");
+            datasetVel.setColor(Color.BLUE);
+            datasetVel.setCircleColor(Color.BLUE);
+            LineDataSet datasetTempCorp = new LineDataSet(entriesTemp, "Temperatura Corporal");
+            datasetTempCorp.setColor(Color.CYAN);
+            datasetTempCorp.setCircleColor(Color.CYAN);
+            LineDataSet datasetTempPel = new LineDataSet(entriesHum, "Temperatura Peltier");
+            datasetTempPel.setColor(Color.MAGENTA);
+            datasetTempPel.setCircleColor(Color.MAGENTA);
             List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
-            dataset.add(datasetVolt);
-            dataset.add(datasetTemp);
-            dataset.add(datasetHum);
+            //dataset.add(datasetVel);
+            dataset.add(datasetTempCorp);
+            //dataset.add(datasetTempPel);
             LineData lineData = new LineData(dataset);
             chart.setData(lineData);
             setChartOptions();
