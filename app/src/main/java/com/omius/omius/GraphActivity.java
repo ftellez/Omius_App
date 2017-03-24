@@ -330,7 +330,8 @@ public class GraphActivity extends AppCompatActivity {
                 //chart.invalidate();
                 isGraphEnabled = true;
                 ConnectDeviceBluetooth();
-                if (isBTAdaptSelected){ stopBluetooth.setEnabled(true); }
+                stopBluetooth.setEnabled(true);
+                //if (isBTAdaptSelected){ stopBluetooth.setEnabled(true); }
             }
         });
     }
@@ -450,12 +451,13 @@ public class GraphActivity extends AppCompatActivity {
                     //Attempt to create a bluetooth socket for comms
                     try {
                         btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+                        isBTAdaptSelected = true;
                     } catch (IOException e1) {
                         Toast.makeText(getBaseContext(), "ERROR - Could not create Bluetooth socket", Toast.LENGTH_SHORT).show();
                     }
 
                     ConnectSocket(btSocket);
-                    isBTAdaptSelected = true;
+
 
                     dialog.dismiss();
                 }
