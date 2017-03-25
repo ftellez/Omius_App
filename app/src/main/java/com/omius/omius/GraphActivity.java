@@ -388,6 +388,10 @@ public class GraphActivity extends AppCompatActivity {
         XAxis xaxis = chart.getXAxis();
         YAxis leftyaxis = chart.getAxisLeft();
         YAxis rightyaxis = chart.getAxisRight();
+        leftyaxis.setAxisMinimum(0.00f);
+        leftyaxis.setAxisMaximum(70.0f);
+        rightyaxis.setAxisMinimum(0.00f);
+        rightyaxis.setAxisMaximum(70.0f);
         leftyaxis.setTextColor(Color.WHITE);
         rightyaxis.setTextColor(Color.WHITE);
         xaxis.setTextColor(Color.WHITE);
@@ -635,7 +639,7 @@ public class GraphActivity extends AppCompatActivity {
         //Get response
         @Override
         protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
+             Toast.makeText(getApplicationContext(), "Saved...",
                     Toast.LENGTH_LONG).show();
         }
     }
