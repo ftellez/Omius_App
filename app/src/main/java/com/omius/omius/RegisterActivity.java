@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.DateFormat;
@@ -95,7 +96,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                fileUri = Uri.fromFile(getOutputPhotoFile());
+                fileUri = FileProvider.getUriForFile(RegisterActivity.this, RegisterActivity.this.getApplicationContext().getPackageName() + ".provider", getOutputPhotoFile());;
                 i.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
                 startActivityForResult(i, CAPTURE_IMAGE_ACTIVITY_REQ);
             }
