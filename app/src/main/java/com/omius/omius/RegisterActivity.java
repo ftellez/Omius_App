@@ -189,7 +189,7 @@ public class RegisterActivity extends AppCompatActivity {
         if (imageFile.isFile()) {
             try { iStream = getContentResolver().openInputStream(photoUri); }
             catch (Exception ex) { Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();}
-            bmp = RotateBitmap(resizeImage(iStream), 180);
+            bmp = RotateBitmap(resizeImage(iStream), 270);
             //Toast.makeText(getBaseContext(), "Imagen subida exitosamente", Toast.LENGTH_LONG).show();
             photoImage.setImageBitmap(bmp);
         }

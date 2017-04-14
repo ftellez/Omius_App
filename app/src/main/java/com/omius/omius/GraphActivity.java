@@ -346,13 +346,13 @@ public class GraphActivity extends AppCompatActivity {
             LineDataSet datasetTempCorp = new LineDataSet(entriesTemp, "Temperatura Corporal");
             datasetTempCorp.setColor(Color.CYAN);
             datasetTempCorp.setCircleColor(Color.CYAN);
-            LineDataSet datasetTempPel = new LineDataSet(entriesHum, "Temperatura Peltier");
+            LineDataSet datasetTempPel = new LineDataSet(entriesHum, "Microclimate Temperature");
             datasetTempPel.setColor(Color.MAGENTA);
             datasetTempPel.setCircleColor(Color.MAGENTA);
             List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
             //dataset.add(datasetVel);
-            dataset.add(datasetTempCorp);
-            //dataset.add(datasetTempPel);
+            //dataset.add(datasetTempCorp);
+            dataset.add(datasetTempPel);
             LineData lineData = new LineData(dataset);
             chart.setData(lineData);
             setChartOptions();
