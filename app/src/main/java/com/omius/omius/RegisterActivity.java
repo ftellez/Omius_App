@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
@@ -207,6 +209,40 @@ public class RegisterActivity extends AppCompatActivity {
         return null;
     }
 
+    public Bitmap bmpResize(Bitmap bitmap,int newWidth,int newHeight) {
+        Bitmap scaledBitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888);
+
+        float ratioX = newWidth / (float) bitmap.getWidth();
+        float ratioY = newHeight / (float) bitmap.getHeight();
+        float middleX = newWidth / 2.0f;
+        float middleY = newHeight / 2.0f;
+
+        Matrix scaleMatrix = new Matrix();
+        scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
+
+        Canvas canvas = new Canvas(scaledBitmap);
+        canvas.setMatrix(scaleMatrix);
+        canvas.drawBitmap(bitmap, middleX - bitmap.getWidth() / 2, middleY - bitmap.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
+
+        return scaledBitmap;
+
+    }
+
+    public Bitmap resizeDirectBitmap(Bitmap bmp){
+        Bitmap resBitmap = Bitmap.createScaledBitmap(bmp,(int)(bmp.getWidth()*0.25), (int)(bmp.getHeight()*0.25), true);
+        return resBitmap;
+    }
+
+    public static Bitmap scaleBitmap(Bitmap bitmap, int wantedWidth, int wantedHeight) {
+        Bitmap output = Bitmap.createBitmap(wantedWidth, wantedHeight, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+        Matrix m = new Matrix();
+        m.setScale((float) wantedWidth / bitmap.getWidth(), (float) wantedHeight / bitmap.getHeight());
+        canvas.drawBitmap(bitmap, m, new Paint());
+
+        return output;
+    }
+
     public static Bitmap RotateBitmap(Bitmap source, float angle) {
         Matrix matrix = new Matrix();
         matrix.postRotate(angle);
@@ -231,15 +267,21 @@ public class RegisterActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQ) {
             if (resultCode == RESULT_OK) {
+//                photoUri = fileUri;
+//                showPhoto(photoUri);
                 if (data == null) {
                     // A known bug here! The image should have saved in fileUri
                     //Toast.makeText(this, "Image loaded successfully", Toast.LENGTH_SHORT).show();
                     photoUri = fileUri;
                     showPhoto(photoUri);
                 } else {
-                    photoUri = data.getData();
+                    //photoUri = (Uri) data.getExtras().get("data");
+                    Bitmap bitParsed = (Bitmap) data.getExtras().get("data");
+                    bmp = RotateBitmap(bmpResize(bitParsed,(int)(Math.ceil(bitParsed.getWidth()*0.25)),(int)(Math.ceil(bitParsed.getHeight()*0.25))), 0);
+                    //Toast.makeText(getBaseContext(), "Imagen subida exitosamente", Toast.LENGTH_LONG).show();
+                    photoImage.setImageBitmap(bmp);
                     //Toast.makeText(this, "Image loaded successfully in: " + data.getData(), Toast.LENGTH_SHORT).show();
-                    showPhoto(photoUri);
+                    //showPhoto(photoUri);
                 }
                 // showPhoto(photoUri);
             } else if (resultCode == RESULT_CANCELED) {
