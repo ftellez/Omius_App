@@ -93,10 +93,12 @@ public class GraphActivity extends AppCompatActivity {
     private StringBuilder recDataString = new StringBuilder();
     String[] valuesPOST = new String[3];
 
-    String coord1 = null;
-    String coord2 = null;
-    String coordtemp = null;
-    String coordhum = null;
+    String coordtime = null;
+    String coordsens1 = null;
+    String coordsens2 = null;
+    String coordsens3 = null;
+    String coordsens4 = null;
+    String coordpot = null;
 
     String eraseSub;
     int lineEnding;
@@ -107,14 +109,18 @@ public class GraphActivity extends AppCompatActivity {
 //    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(dataBattery);
 
     List<Entry> entries = new ArrayList<Entry>();
-    List<Entry> entriesTemp = new ArrayList<Entry>();
-    List<Entry> entriesHum = new ArrayList<Entry>();
+    List<Entry> entriesTemp1 = new ArrayList<Entry>();
+    List<Entry> entriesTemp2 = new ArrayList<Entry>();
+    List<Entry> entriesTemp3 = new ArrayList<Entry>();
+    List<Entry> entriesTemp4 = new ArrayList<Entry>();
 
     int graphPoints = 0;
 
-    public ArrayList<Float> Points = new ArrayList<Float>();
-    public ArrayList<Float> PointsTemp = new ArrayList<Float>();
-    public ArrayList<Float> PointsHum = new ArrayList<Float>();
+    public ArrayList<Float> PointsPot = new ArrayList<Float>();
+    public ArrayList<Float> PointsTemp1 = new ArrayList<Float>();
+    public ArrayList<Float> PointsTemp2 = new ArrayList<Float>();
+    public ArrayList<Float> PointsTemp3 = new ArrayList<Float>();
+    public ArrayList<Float> PointsTemp4 = new ArrayList<Float>();
 
     public LineChart chart = null;
 
@@ -134,9 +140,11 @@ public class GraphActivity extends AppCompatActivity {
         saveImage.setEnabled(false);
 
         chart = (LineChart) findViewById(R.id.Temperature_chart);
-        Points.clear();
-        PointsTemp.clear();
-        PointsHum.clear();
+        PointsPot.clear();
+        PointsTemp1.clear();
+        PointsTemp2.clear();
+        PointsTemp3.clear();
+        PointsTemp4.clear();
 
         //It is best to check BT status at onResume in case something has changed while app was paused etc
         checkBTState();
@@ -153,7 +161,7 @@ public class GraphActivity extends AppCompatActivity {
                     if (lineEnding > 0)
                         recDataString.replace(lineEnding,lineEnding+4,"");
                     int endOfLineIndex = recDataString.indexOf(",");                    // determine the end-of-line
-                    if (coord1 == null) {
+                    if (coordtime == null) {
                         if (endOfLineIndex > 0) {                                           // make sure there data before ~
                             //String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
                             //int dataLength = dataInPrint.length();                          //get length of data received
@@ -173,7 +181,7 @@ public class GraphActivity extends AppCompatActivity {
                                 }
                             } else {
 //                                Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                coord1 = chk;
+                                coordtime = chk;
                                 eraseSub = recDataString.substring(0, endOfLineIndex + 1);
                                 int i = recDataString.indexOf(eraseSub);
                                 if (i != -1) {
@@ -186,11 +194,11 @@ public class GraphActivity extends AppCompatActivity {
                             }
                         }
                     } else {
-                        if (coord2 == null) {
+                        if (coordpot == null) {
                             if (endOfLineIndex > 0) {                                           // make sure there data before ~
                                 String chk = recDataString.substring(0, endOfLineIndex);
 //                                Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                coord2 = chk;
+                                coordpot = chk;
 
                                 eraseSub = recDataString.substring(0, endOfLineIndex + 1);
                                 int i = recDataString.indexOf(eraseSub);
@@ -202,18 +210,18 @@ public class GraphActivity extends AppCompatActivity {
                                     }
                                 }
 
-                                Points.add(Float.parseFloat(coord1));
-                                Points.add(Float.parseFloat(coord2));
+                                PointsPot.add(Float.parseFloat(coordtime));
+                                PointsPot.add(Float.parseFloat(coordpot));
 //                                coord1 = null;
 //                                coord2 = null;
 //                                RefreshGraph(chart);
                             }
                         } else {
-                            if (coordtemp == null){
+                            if (coordsens1 == null){
                                 if (endOfLineIndex > 0) {                               // make sure there data before ~
                                     String chk = recDataString.substring(0, endOfLineIndex);
 //                                Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                    coordtemp = chk;
+                                    coordsens1 = chk;
 
                                     eraseSub = recDataString.substring(0, endOfLineIndex + 1);
                                     int i = recDataString.indexOf(eraseSub);
@@ -225,8 +233,8 @@ public class GraphActivity extends AppCompatActivity {
                                         }
                                     }
 
-                                    PointsTemp.add(Float.parseFloat(coord1));
-                                    PointsTemp.add(Float.parseFloat(coordtemp));
+                                    PointsTemp1.add(Float.parseFloat(coordtime));
+                                    PointsTemp1.add(Float.parseFloat(coordsens1));
 
 //                                coord1 = null;
 //                                coord2 = null;
@@ -234,11 +242,11 @@ public class GraphActivity extends AppCompatActivity {
 //                                RefreshGraph(chart);
                                 }
                             } else {
-                                if (coordhum == null){
+                                if (coordsens2 == null){
                                     if (endOfLineIndex > 0) {                                           // make sure there data before ~
                                         String chk = recDataString.substring(0, endOfLineIndex);
 //                                          Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                        coordhum = chk;
+                                        coordsens2 = chk;
 
                                         eraseSub = recDataString.substring(0, endOfLineIndex + 1);
                                         int i = recDataString.indexOf(eraseSub);
@@ -250,16 +258,61 @@ public class GraphActivity extends AppCompatActivity {
                                             }
                                         }
 
-                                        PointsHum.add(Float.parseFloat(coord1));
-                                        PointsHum.add(Float.parseFloat(coordhum));
+                                        PointsTemp2.add(Float.parseFloat(coordtime));
+                                        PointsTemp2.add(Float.parseFloat(coordsens2));
 
-                                        coord1 = null;
-                                        coord2 = null;
-                                        coordtemp = null;
-                                        coordhum = null;
+                                    }
+                                } else {
+                                    if (coordsens3 == null){
+                                        if (endOfLineIndex > 0) {                                           // make sure there data before ~
+                                            String chk = recDataString.substring(0, endOfLineIndex);
+//                                          Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
+                                            coordsens3 = chk;
 
-                                        if (isGraphEnabled){
-                                            RefreshGraph();
+                                            eraseSub = recDataString.substring(0, endOfLineIndex + 1);
+                                            int i = recDataString.indexOf(eraseSub);
+                                            if (i != -1) {
+                                                try {
+                                                    recDataString.delete(i, eraseSub.length());                    //clear all string data
+                                                } catch (StringIndexOutOfBoundsException ex) {
+                                                    Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+
+                                            PointsTemp3.add(Float.parseFloat(coordtime));
+                                            PointsTemp3.add(Float.parseFloat(coordsens3));
+                                        }
+                                    } else {
+                                        if (coordsens4 == null){
+                                            if (endOfLineIndex > 0) {                                           // make sure there data before ~
+                                                String chk = recDataString.substring(0, endOfLineIndex);
+//                                          Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
+                                                coordsens4 = chk;
+
+                                                eraseSub = recDataString.substring(0, endOfLineIndex + 1);
+                                                int i = recDataString.indexOf(eraseSub);
+                                                if (i != -1) {
+                                                    try {
+                                                        recDataString.delete(i, eraseSub.length());                    //clear all string data
+                                                    } catch (StringIndexOutOfBoundsException ex) {
+                                                        Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+
+                                                PointsTemp4.add(Float.parseFloat(coordtime));
+                                                PointsTemp4.add(Float.parseFloat(coordsens4));
+
+                                                coordtime = null;
+                                                coordpot = null;
+                                                coordsens1 = null;
+                                                coordsens2 = null;
+                                                coordsens3 = null;
+                                                coordsens4 = null;
+
+                                                if (isGraphEnabled){
+                                                    RefreshGraph();
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -323,9 +376,11 @@ public class GraphActivity extends AppCompatActivity {
                 }
                 bluetoothIn.removeMessages(0);
                 graphPoints = 0;
-                Points.clear();
-                PointsTemp.clear();
-                PointsHum.clear();
+                PointsPot.clear();
+                PointsTemp1.clear();
+                PointsTemp2.clear();
+                PointsTemp3.clear();
+                PointsTemp4.clear();
                 //chart.clearValues();
                 //chart.invalidate();
                 isGraphEnabled = true;
@@ -337,22 +392,32 @@ public class GraphActivity extends AppCompatActivity {
 
     public void RefreshGraph() {
         if (isGraphEnabled) {
-            entries.add(new Entry(Points.get(graphPoints), Points.get(graphPoints + 1)));
-            entriesTemp.add(new Entry(PointsTemp.get(graphPoints), PointsTemp.get(graphPoints + 1)));
-            entriesHum.add(new Entry(PointsHum.get(graphPoints), PointsHum.get(graphPoints + 1)));
-            LineDataSet datasetVel = new LineDataSet(entries, "Velocidad");
-            datasetVel.setColor(Color.BLUE);
-            datasetVel.setCircleColor(Color.BLUE);
-            LineDataSet datasetTempCorp = new LineDataSet(entriesTemp, "Temperatura Corporal");
-            datasetTempCorp.setColor(Color.CYAN);
-            datasetTempCorp.setCircleColor(Color.CYAN);
-            LineDataSet datasetTempPel = new LineDataSet(entriesHum, "Temperatura Peltier");
-            datasetTempPel.setColor(Color.MAGENTA);
-            datasetTempPel.setCircleColor(Color.MAGENTA);
+            entries.add(new Entry(PointsPot.get(graphPoints), PointsPot.get(graphPoints + 1)));
+            entriesTemp1.add(new Entry(PointsTemp1.get(graphPoints), PointsTemp1.get(graphPoints + 1)));
+            entriesTemp2.add(new Entry(PointsTemp2.get(graphPoints), PointsTemp2.get(graphPoints + 1)));
+            entriesTemp3.add(new Entry(PointsTemp3.get(graphPoints), PointsTemp3.get(graphPoints + 1)));
+            entriesTemp4.add(new Entry(PointsTemp4.get(graphPoints), PointsTemp4.get(graphPoints + 1)));
+            LineDataSet datasetPot = new LineDataSet(entries, "Potenciometro");
+            datasetPot.setColor(Color.BLUE);
+            datasetPot.setCircleColor(Color.BLUE);
+            LineDataSet datasetTempCorp1 = new LineDataSet(entriesTemp1, "Temperatura Sensor 1");
+            datasetTempCorp1.setColor(Color.CYAN);
+            datasetTempCorp1.setCircleColor(Color.CYAN);
+            LineDataSet datasetTempCorp2 = new LineDataSet(entriesTemp2, "Temperatura Sensor 2");
+            datasetTempCorp2.setColor(Color.MAGENTA);
+            datasetTempCorp2.setCircleColor(Color.MAGENTA);
+            LineDataSet datasetTempCorp3 = new LineDataSet(entriesTemp3, "Temperatura Sensor 3");
+            datasetTempCorp3.setColor(Color.GRAY);
+            datasetTempCorp3.setCircleColor(Color.GRAY);
+            LineDataSet datasetTempCorp4 = new LineDataSet(entriesTemp4, "Temperatura Sensor 4");
+            datasetTempCorp4.setColor(Color.GREEN);
+            datasetTempCorp4.setCircleColor(Color.GREEN);
             List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
-            //dataset.add(datasetVel);
-            dataset.add(datasetTempCorp);
-            //dataset.add(datasetTempPel);
+            dataset.add(datasetPot);
+            dataset.add(datasetTempCorp1);
+            dataset.add(datasetTempCorp2);
+            dataset.add(datasetTempCorp3);
+            //dataset.add(datasetTempCorp4);
             LineData lineData = new LineData(dataset);
             chart.setData(lineData);
             setChartOptions();
@@ -388,10 +453,10 @@ public class GraphActivity extends AppCompatActivity {
         XAxis xaxis = chart.getXAxis();
         YAxis leftyaxis = chart.getAxisLeft();
         YAxis rightyaxis = chart.getAxisRight();
-        leftyaxis.setAxisMinimum(0.00f);
-        leftyaxis.setAxisMaximum(70.0f);
-        rightyaxis.setAxisMinimum(0.00f);
-        rightyaxis.setAxisMaximum(70.0f);
+        leftyaxis.setAxisMinimum(-1.00f);
+        leftyaxis.setAxisMaximum(105.0f);
+        rightyaxis.setAxisMinimum(-1.00f);
+        rightyaxis.setAxisMaximum(105.0f);
         leftyaxis.setTextColor(Color.WHITE);
         rightyaxis.setTextColor(Color.WHITE);
         xaxis.setTextColor(Color.WHITE);
@@ -594,11 +659,13 @@ public class GraphActivity extends AppCompatActivity {
                 URL url = new URL("http://planz.omiustech.com/bombaacida.php");
                 JSONObject postDataparams = new JSONObject();
                 postDataparams.put("Tipo", "log");
-                for(int i = 0; i < PointsHum.size(); i = i + 2){
-                    postDataparams.put("Tiempo" + i/2, Points.get(i));
-                    postDataparams.put("Voltaje" + i/2, Points.get(i + 1) );
-                    postDataparams.put("Temperatura" + i/2,  PointsTemp.get(i + 1));
-                    postDataparams.put("Humedad" + i/2, PointsHum.get(i + 1));
+                for(int i = 0; i < PointsTemp4.size(); i = i + 2){
+                    postDataparams.put("Tiempo" + i/2, PointsPot.get(i));
+                    postDataparams.put("pot" + i/2, PointsPot.get(i + 1) );
+                    postDataparams.put("Sensor1" + i/2, PointsTemp1.get(i + 1));
+                    postDataparams.put("Sensor2" + i/2, PointsTemp2.get(i + 1));
+                    postDataparams.put("Sensor3" + i/2, PointsTemp3.get(i + 1));
+                    postDataparams.put("Sensor4" + i/2, PointsTemp4.get(i + 1));
                 }
 
                 HttpURLConnection httpclient = (HttpURLConnection) url.openConnection();
