@@ -82,6 +82,7 @@ public class RegisterActivity extends AppCompatActivity {
     ImageUploadHandler imgupload;
     Bitmap bmp;
     Uri photoUri = null;
+    Boolean photo = false;
     private GoogleApiClient client;
 
     @Override
@@ -273,6 +274,7 @@ public class RegisterActivity extends AppCompatActivity {
                     // A known bug here! The image should have saved in fileUri
                     //Toast.makeText(this, "Image loaded successfully", Toast.LENGTH_SHORT).show();
                     photoUri = fileUri;
+                    photo = true;
                     showPhoto(photoUri);
                 } else {
                     //photoUri = (Uri) data.getExtras().get("data");
@@ -280,6 +282,7 @@ public class RegisterActivity extends AppCompatActivity {
                     bmp = RotateBitmap(bmpResize(bitParsed,(int)(Math.ceil(bitParsed.getWidth()*0.25)),(int)(Math.ceil(bitParsed.getHeight()*0.25))), 0);
                     //Toast.makeText(getBaseContext(), "Imagen subida exitosamente", Toast.LENGTH_LONG).show();
                     photoImage.setImageBitmap(bmp);
+                    photo = true;
                     //Toast.makeText(this, "Image loaded successfully in: " + data.getData(), Toast.LENGTH_SHORT).show();
                     //showPhoto(photoUri);
                 }
@@ -375,7 +378,7 @@ public class RegisterActivity extends AppCompatActivity {
             _emailText.setError(null);
         }
 
-        if (photoUri == null) {
+        if (!photo) {
             Toast.makeText(getBaseContext(), "Must add an image", Toast.LENGTH_LONG).show();
             valid = false;
         }
