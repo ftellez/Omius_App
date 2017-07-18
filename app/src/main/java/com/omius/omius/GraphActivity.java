@@ -36,6 +36,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -74,53 +75,48 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.UUID;
 
 public class GraphActivity extends AppCompatActivity {
-
     private BluetoothAdapter mBtAdapter;
-    private BluetoothSocket btSocket;
-    public String BtAddress = null;
-    public ConnectedThread mConnectedThread = null;
-    final int handlerState = 0;
     Button stopBluetooth = null;
     Button connectBluetooth = null;
     Button saveImage = null;
 
-    // UUID service - This is the type of Bluetooth device that the BT module is
-    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    Handler bluetoothIn;
     private StringBuilder recDataString = new StringBuilder();
-    String[] valuesPOST = new String[3];
+    private BluetoothSerial btOmius = null;
 
     String coordtime = null;
+    String coordsens0 = null;
     String coordsens1 = null;
     String coordsens2 = null;
     String coordsens3 = null;
     String coordsens4 = null;
-    String coordpot = null;
+    String coordsens5 = null;
 
     String eraseSub;
     int lineEnding;
+    int pointer = 0;
     boolean isGraphEnabled = true;
-    boolean isBTAdaptSelected = false;
-
-//    DataPoint[] dataBattery = new DataPoint[]{new DataPoint(0, 0)};
-//    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(dataBattery);
 
     List<Entry> entries = new ArrayList<Entry>();
     List<Entry> entriesTemp1 = new ArrayList<Entry>();
     List<Entry> entriesTemp2 = new ArrayList<Entry>();
     List<Entry> entriesTemp3 = new ArrayList<Entry>();
     List<Entry> entriesTemp4 = new ArrayList<Entry>();
+    List<Entry> entriesTemp5 = new ArrayList<Entry>();
 
     int graphPoints = 0;
 
-    public ArrayList<Float> PointsPot = new ArrayList<Float>();
+    public ArrayList<String> PointsToParse = new ArrayList<String>();
+
+    public ArrayList<Float> PointsTemp0 = new ArrayList<Float>();
     public ArrayList<Float> PointsTemp1 = new ArrayList<Float>();
     public ArrayList<Float> PointsTemp2 = new ArrayList<Float>();
     public ArrayList<Float> PointsTemp3 = new ArrayList<Float>();
     public ArrayList<Float> PointsTemp4 = new ArrayList<Float>();
+    public ArrayList<Float> PointsTemp5 = new ArrayList<Float>();
 
     public LineChart chart = null;
 
@@ -128,213 +124,75 @@ public class GraphActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        graph = (GraphView) findViewById(R.id.graph);
-        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         stopBluetooth = (Button) findViewById(R.id.btnStopBluetooth);
         connectBluetooth = (Button) findViewById(R.id.btnConnectBluetooth);
         saveImage = (Button) findViewById(R.id.btnSaveImage);
-
 
         stopBluetooth.setEnabled(false);
         saveImage.setEnabled(false);
 
         chart = (LineChart) findViewById(R.id.Temperature_chart);
-        PointsPot.clear();
+        PointsTemp0.clear();
         PointsTemp1.clear();
         PointsTemp2.clear();
         PointsTemp3.clear();
         PointsTemp4.clear();
+        PointsTemp5.clear();
 
-        //It is best to check BT status at onResume in case something has changed while app was paused etc
         checkBTState();
 
-
-//        graph.addSeries(series);
-        bluetoothIn = new Handler() {
-            public void handleMessage(android.os.Message msg) {
-                if (msg.what == handlerState) {                                     //if message is what we want
-                    String readMessage = (String) msg.obj;                                                                // msg.arg1 = bytes from connect thread
-                    recDataString.append(readMessage);                                      //keep appending to string until ~
-
-                    lineEnding = recDataString.indexOf("\r\n");
-                    if (lineEnding > 0)
-                        recDataString.replace(lineEnding,lineEnding+4,"");
-                    int endOfLineIndex = recDataString.indexOf(",");                    // determine the end-of-line
-                    if (coordtime == null) {
-                        if (endOfLineIndex > 0) {                                           // make sure there data before ~
-                            //String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
-                            //int dataLength = dataInPrint.length();                          //get length of data received
-
-                            String chk = recDataString.substring(0, endOfLineIndex);
-
-                            if (chk.equals("0")) {
-//                                Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                eraseSub = recDataString.substring(0, endOfLineIndex + 1);
-                                int i = recDataString.indexOf(eraseSub);
-                                if (i != -1) {
-                                    try {
-                                        recDataString.delete(i, eraseSub.length());                    //clear all string data
-                                    } catch (StringIndexOutOfBoundsException ex) {
-                                        Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            } else {
-//                                Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                coordtime = chk;
-                                eraseSub = recDataString.substring(0, endOfLineIndex + 1);
-                                int i = recDataString.indexOf(eraseSub);
-                                if (i != -1) {
-                                    try {
-                                        recDataString.delete(i, eraseSub.length());                    //clear all string data
-                                    } catch (StringIndexOutOfBoundsException ex) {
-                                        Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        if (coordpot == null) {
-                            if (endOfLineIndex > 0) {                                           // make sure there data before ~
-                                String chk = recDataString.substring(0, endOfLineIndex);
-//                                Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                coordpot = chk;
-
-                                eraseSub = recDataString.substring(0, endOfLineIndex + 1);
-                                int i = recDataString.indexOf(eraseSub);
-                                if (i != -1) {
-                                    try {
-                                        recDataString.delete(i, eraseSub.length());                    //clear all string data
-                                    } catch (StringIndexOutOfBoundsException ex) {
-                                        Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-
-                                PointsPot.add(Float.parseFloat(coordtime));
-                                PointsPot.add(Float.parseFloat(coordpot));
-//                                coord1 = null;
-//                                coord2 = null;
-//                                RefreshGraph(chart);
-                            }
-                        } else {
-                            if (coordsens1 == null){
-                                if (endOfLineIndex > 0) {                               // make sure there data before ~
-                                    String chk = recDataString.substring(0, endOfLineIndex);
-//                                Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                    coordsens1 = chk;
-
-                                    eraseSub = recDataString.substring(0, endOfLineIndex + 1);
-                                    int i = recDataString.indexOf(eraseSub);
-                                    if (i != -1) {
-                                        try {
-                                            recDataString.delete(i, eraseSub.length());                    //clear all string data
-                                        } catch (StringIndexOutOfBoundsException ex) {
-                                            Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                        }
-                                    }
-
-                                    PointsTemp1.add(Float.parseFloat(coordtime));
-                                    PointsTemp1.add(Float.parseFloat(coordsens1));
-
-//                                coord1 = null;
-//                                coord2 = null;
-
-//                                RefreshGraph(chart);
-                                }
-                            } else {
-                                if (coordsens2 == null){
-                                    if (endOfLineIndex > 0) {                                           // make sure there data before ~
-                                        String chk = recDataString.substring(0, endOfLineIndex);
-//                                          Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                        coordsens2 = chk;
-
-                                        eraseSub = recDataString.substring(0, endOfLineIndex + 1);
-                                        int i = recDataString.indexOf(eraseSub);
-                                        if (i != -1) {
-                                            try {
-                                                recDataString.delete(i, eraseSub.length());                    //clear all string data
-                                            } catch (StringIndexOutOfBoundsException ex) {
-                                                Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                            }
-                                        }
-
-                                        PointsTemp2.add(Float.parseFloat(coordtime));
-                                        PointsTemp2.add(Float.parseFloat(coordsens2));
-
-                                    }
-                                } else {
-                                    if (coordsens3 == null){
-                                        if (endOfLineIndex > 0) {                                           // make sure there data before ~
-                                            String chk = recDataString.substring(0, endOfLineIndex);
-//                                          Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                            coordsens3 = chk;
-
-                                            eraseSub = recDataString.substring(0, endOfLineIndex + 1);
-                                            int i = recDataString.indexOf(eraseSub);
-                                            if (i != -1) {
-                                                try {
-                                                    recDataString.delete(i, eraseSub.length());                    //clear all string data
-                                                } catch (StringIndexOutOfBoundsException ex) {
-                                                    Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                                }
-                                            }
-
-                                            PointsTemp3.add(Float.parseFloat(coordtime));
-                                            PointsTemp3.add(Float.parseFloat(coordsens3));
-                                        }
-                                    } else {
-                                        if (coordsens4 == null){
-                                            if (endOfLineIndex > 0) {                                           // make sure there data before ~
-                                                String chk = recDataString.substring(0, endOfLineIndex);
-//                                          Toast.makeText(getBaseContext(),chk,Toast.LENGTH_SHORT).show();
-                                                coordsens4 = chk;
-
-                                                eraseSub = recDataString.substring(0, endOfLineIndex + 1);
-                                                int i = recDataString.indexOf(eraseSub);
-                                                if (i != -1) {
-                                                    try {
-                                                        recDataString.delete(i, eraseSub.length());                    //clear all string data
-                                                    } catch (StringIndexOutOfBoundsException ex) {
-                                                        Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                                    }
-                                                }
-
-                                                PointsTemp4.add(Float.parseFloat(coordtime));
-                                                PointsTemp4.add(Float.parseFloat(coordsens4));
-
-                                                coordtime = null;
-                                                coordpot = null;
-                                                coordsens1 = null;
-                                                coordsens2 = null;
-                                                coordsens3 = null;
-                                                coordsens4 = null;
-
-                                                if (isGraphEnabled){
-                                                    RefreshGraph();
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+        btOmius = new BluetoothSerial(this,new BluetoothSerial.MessageHandler() {
+            @Override
+            public int read(int bufferSize, byte[] buffer){
+                int respReturn = 0;
+                final String TAG = "MessageHandler";
+                String readMessage = new String(buffer);                          // msg.arg1 = bytes from connect thread
+                lineEnding = readMessage.indexOf("\r\n");
+                if (lineEnding != -1){
+                    recDataString = new StringBuilder(readMessage.substring(0,lineEnding));
+                    while(recDataString.indexOf(",") > 0){
+                        PointsToParse.add(recDataString.substring(0,recDataString.indexOf(",")));
+                        try {
+                            recDataString.delete(0, recDataString.indexOf(",")+1);                    //clear all string data
+                        } catch (StringIndexOutOfBoundsException ex) {
+                            Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     }
+                    PointsTemp0.add(Float.parseFloat(PointsToParse.get(pointer)));
+                    PointsTemp0.add(Float.parseFloat(PointsToParse.get(pointer + 1)));
+                    PointsTemp1.add(Float.parseFloat(PointsToParse.get(pointer)));
+                    PointsTemp1.add(Float.parseFloat(PointsToParse.get(pointer + 2)));
+                    PointsTemp2.add(Float.parseFloat(PointsToParse.get(pointer)));
+                    PointsTemp2.add(Float.parseFloat(PointsToParse.get(pointer + 3)));
+                    PointsTemp3.add(Float.parseFloat(PointsToParse.get(pointer)));
+                    PointsTemp3.add(Float.parseFloat(PointsToParse.get(pointer + 4)));
+                    PointsTemp4.add(Float.parseFloat(PointsToParse.get(pointer)));
+                    PointsTemp4.add(Float.parseFloat(PointsToParse.get(pointer + 5)));
+                    PointsTemp5.add(Float.parseFloat(PointsToParse.get(pointer)));
+                    PointsTemp5.add(Float.parseFloat(PointsToParse.get(pointer + 6)));
+
+                    Log.d(TAG, "Graph Enabled: " + String.valueOf(isGraphEnabled));
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (isGraphEnabled) {
+                                RefreshGraph();
+                                Log.d(TAG, "Entered refresh graph.");
+                            }
+                        }
+                    });
+
+                    pointer = pointer + 7;
+                    respReturn = lineEnding + 2;
                 }
+                return respReturn;
             }
-        };
+        },"OMIUS");
 
         stopBluetooth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    mConnectedThread.mmInStream.close();
-                    mConnectedThread.mmOutStream.close();
-                    mConnectedThread.running = false;
-                    btSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                //bluetoothIn.removeMessages(0);
                 isGraphEnabled = false;
                 new SendPOSTrequest().execute();
                 saveImage.setEnabled(true);
@@ -363,83 +221,52 @@ public class GraphActivity extends AppCompatActivity {
         connectBluetooth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try{
-                    if (mConnectedThread != null){
-                        mConnectedThread.mmInStream.close();
-                        mConnectedThread.mmOutStream.close();
-                        mConnectedThread.running = false;
-                        mConnectedThread = null;
-                        btSocket.close();
-                    }
-                } catch (Exception ex){
-                    ex.printStackTrace();
-                }
-                bluetoothIn.removeMessages(0);
-                graphPoints = 0;
-                PointsPot.clear();
-                PointsTemp1.clear();
-                PointsTemp2.clear();
-                PointsTemp3.clear();
-                PointsTemp4.clear();
-                //chart.clearValues();
-                //chart.invalidate();
                 isGraphEnabled = true;
-                ConnectDeviceBluetooth();
                 stopBluetooth.setEnabled(true);
             }
         });
     }
 
     public void RefreshGraph() {
+        final String TAG = "RefreshGraph";
         if (isGraphEnabled) {
-            entries.add(new Entry(PointsPot.get(graphPoints), PointsPot.get(graphPoints + 1)));
+            entries.add(new Entry(PointsTemp0.get(graphPoints), PointsTemp0.get(graphPoints + 1)));
             entriesTemp1.add(new Entry(PointsTemp1.get(graphPoints), PointsTemp1.get(graphPoints + 1)));
             entriesTemp2.add(new Entry(PointsTemp2.get(graphPoints), PointsTemp2.get(graphPoints + 1)));
             entriesTemp3.add(new Entry(PointsTemp3.get(graphPoints), PointsTemp3.get(graphPoints + 1)));
             entriesTemp4.add(new Entry(PointsTemp4.get(graphPoints), PointsTemp4.get(graphPoints + 1)));
-            LineDataSet datasetPot = new LineDataSet(entries, "Potenciometro");
-            datasetPot.setColor(Color.BLUE);
-            datasetPot.setCircleColor(Color.BLUE);
-            LineDataSet datasetTempCorp1 = new LineDataSet(entriesTemp1, "Temperatura Sensor 1");
+            entriesTemp5.add(new Entry(PointsTemp5.get(graphPoints), PointsTemp5.get(graphPoints + 1)));
+            LineDataSet datasetTempCorp0 = new LineDataSet(entries, "Antebrazo Izquierdo");
+            datasetTempCorp0.setColor(Color.BLUE);
+            datasetTempCorp0.setCircleColor(Color.BLUE);
+            LineDataSet datasetTempCorp1 = new LineDataSet(entriesTemp1, "Antebrazo Derecho");
             datasetTempCorp1.setColor(Color.CYAN);
             datasetTempCorp1.setCircleColor(Color.CYAN);
-            LineDataSet datasetTempCorp2 = new LineDataSet(entriesTemp2, "Temperatura Sensor 2");
+            LineDataSet datasetTempCorp2 = new LineDataSet(entriesTemp2, "Brazo Izquierdo");
             datasetTempCorp2.setColor(Color.MAGENTA);
             datasetTempCorp2.setCircleColor(Color.MAGENTA);
-            LineDataSet datasetTempCorp3 = new LineDataSet(entriesTemp3, "Temperatura Sensor 3");
+            LineDataSet datasetTempCorp3 = new LineDataSet(entriesTemp3, "Brazo Derecho");
             datasetTempCorp3.setColor(Color.GRAY);
             datasetTempCorp3.setCircleColor(Color.GRAY);
-            LineDataSet datasetTempCorp4 = new LineDataSet(entriesTemp4, "Temperatura Sensor 4");
+            LineDataSet datasetTempCorp4 = new LineDataSet(entriesTemp4, "Pectoral Izquierdo");
             datasetTempCorp4.setColor(Color.GREEN);
             datasetTempCorp4.setCircleColor(Color.GREEN);
+            LineDataSet datasetTempCorp5 = new LineDataSet(entriesTemp5, "Pectoral Derecho");
+            datasetTempCorp5.setColor(Color.RED);
+            datasetTempCorp5.setCircleColor(Color.RED);
             List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
-            dataset.add(datasetPot);
+            dataset.add(datasetTempCorp0);
             dataset.add(datasetTempCorp1);
             dataset.add(datasetTempCorp2);
             dataset.add(datasetTempCorp3);
-            //dataset.add(datasetTempCorp4);
+            dataset.add(datasetTempCorp4);
+            dataset.add(datasetTempCorp5);
             LineData lineData = new LineData(dataset);
             chart.setData(lineData);
             setChartOptions();
             graphPoints = graphPoints + 2;
+            Log.d(TAG,"Points added: " + graphPoints/2);
         }
-    }
-
-    public Bitmap resizeImage(InputStream is) {
-        BitmapFactory.Options options;
-        try {
-            options = new BitmapFactory.Options();
-            options.inSampleSize = 4; // 1/3 of origin image size from width and height
-            Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
-            return bitmap;
-        } catch (Exception ex) { ex.printStackTrace(); }
-        return null;
-    }
-
-    public static Bitmap RotateBitmap(Bitmap source, float angle) {
-        Matrix matrix = new Matrix();
-        matrix.postRotate(angle);
-        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
     public void setChartOptions(){
@@ -461,6 +288,7 @@ public class GraphActivity extends AppCompatActivity {
         rightyaxis.setTextColor(Color.WHITE);
         xaxis.setTextColor(Color.WHITE);
         chart.setDescription(desc);
+        //chart.fitScreen();
         chart.invalidate(); // refresh
     }
 
@@ -476,102 +304,12 @@ public class GraphActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        //It is best to check BT status at onResume in case something has changed while app was paused etc
-        checkBTState();
-    }
-
-    public void ConnectDeviceBluetooth() {
-        // Get a set of currently paired devices and append to pairedDevices list
-        Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
-
-        // Initialize array adapter for paired devices
-        final ArrayList<String> mPairedDevicesArrayAdapter = new ArrayList<String>();
-
-        // Add previously paired devices to the array
-        if (pairedDevices.size() > 0) {
-            for (BluetoothDevice device : pairedDevices) {
-                mPairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-            }
-
-            final AlertDialog dialog;
-            final AlertDialog.Builder alertDialog = new AlertDialog.Builder(GraphActivity.this);
-            LayoutInflater inflater = getLayoutInflater();
-            View convertView = (View) inflater.inflate(R.layout.custom, null);
-            alertDialog.setView(convertView);
-            alertDialog.setTitle("Bluetooth Device List: ");
-            ListView lv = (ListView) convertView.findViewById(R.id.listView1);
-            final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mPairedDevicesArrayAdapter);
-            lv.setAdapter(adapter);
-            dialog = alertDialog.show();
-
-            lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-                    Toast.makeText(getBaseContext(), "Connecting...", Toast.LENGTH_SHORT).show();
-                    // Get the device MAC address, which is the last 17 chars in the View
-                    String info = adapter.getItem(position);
-                    String address = info.substring(info.length() - 17);
-                    BtAddress = address;
-
-                    // Set up a pointer to the remote device using its address.
-                    BluetoothDevice device = mBtAdapter.getRemoteDevice(BtAddress);
-
-                    //Attempt to create a bluetooth socket for comms
-                    try {
-                        btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
-                    } catch (IOException e1) {
-                        Toast.makeText(getBaseContext(), "ERROR - Could not create Bluetooth socket", Toast.LENGTH_SHORT).show();
-                    }
-
-                    ConnectSocket(btSocket);
-                    isBTAdaptSelected = true;
-
-                    dialog.dismiss();
-                }
-            });
-        } else {
-            mPairedDevicesArrayAdapter.add("no devices paired");
-        }
-    }
-
-    public void ConnectSocket(BluetoothSocket BtSocket) {
-        // Establish the connection.
-        try {
-            Toast.makeText(getBaseContext(), "Conectando....", Toast.LENGTH_SHORT).show();
-            BtSocket.connect();
-        } catch (IOException e) {
-            try {
-                BtSocket.close();        //If IO exception occurs attempt to close socket
-            } catch (IOException e2) {
-                Toast.makeText(getBaseContext(), "ERROR - Could not close Bluetooth socket", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        //When activity is resumed, attempt to send a piece of junk data ('x') so that it will fail if not connected
-        // i.e don't wait for a user to press button to recognise connection failure
-        if (mConnectedThread == null) {
-            mConnectedThread = null;
-            mConnectedThread = new ConnectedThread(btSocket);
-            mConnectedThread.start();
-        }
-
-        //I send a character when resuming.beginning transmission to check device is connected
-        //If it is not an exception will be thrown in the write method and finish() will be called
-        //--------mConnectedThread.write("x");
-
-        final AlertDialog addressConf = new AlertDialog.Builder(GraphActivity.this)
-                .setTitle("Bluetooth Address")
-                .setMessage("Connection Ready!")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                })
-                .show();
+        btOmius.onResume();
     }
 
     //method to check if the device has Bluetooth and if it is on.
     //Prompts the user to turn it on if it is off
+
     private void checkBTState() {
         // Check device has Bluetooth and that it is turned on
         mBtAdapter = BluetoothAdapter.getDefaultAdapter(); // CHECK THIS OUT THAT IT WORKS!!!
@@ -587,69 +325,6 @@ public class GraphActivity extends AppCompatActivity {
         }
     }
 
-    //create new class for connect thread
-    private class ConnectedThread extends Thread {
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-        volatile boolean running = true;
-
-        //creation of the connect thread
-        public ConnectedThread(BluetoothSocket ArrivingSocket) {
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            try {
-                //Create I/O streams for connection
-                tmpIn = ArrivingSocket.getInputStream();
-                tmpOut = ArrivingSocket.getOutputStream();
-            } catch (IOException e) {
-                Toast.makeText(getBaseContext(), "ERROR: I/O Streams Failed.", Toast.LENGTH_SHORT).show();
-            }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-
-        public void run() {
-            byte[] buffer = new byte[256];
-            int bytes;
-
-            // Keep looping to listen for received messages
-            while (true) {
-                if (!running){
-                    try {
-                        mmInStream.close();
-                        mmOutStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    return;
-                }
-                try {
-                    bytes = mmInStream.read(buffer);            //read bytes from input buffer
-                    String readMessage = new String(buffer, 0, bytes);
-                    // Send the obtained bytes to the UI Activity via handler
-                    bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
-                } catch (Exception e) {
-                    //break;
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        //write method
-        public void write(String input) {
-            byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
-            try {
-                mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
-            } catch (IOException e) {
-                //if you cannot write, close the application
-                Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
-                finish();
-            }
-        }
-    }
-
     private class SendPOSTrequest extends AsyncTask<String, Void, String> {
         protected void onPreExecute() {}
         protected String doInBackground(String...params) {
@@ -659,13 +334,14 @@ public class GraphActivity extends AppCompatActivity {
                 URL url = new URL("http://planz.omiustech.com/bombaacida.php");
                 JSONObject postDataparams = new JSONObject();
                 postDataparams.put("Tipo", "log");
-                for(int i = 0; i < PointsTemp4.size(); i = i + 2){
-                    postDataparams.put("Tiempo" + i/2, PointsPot.get(i));
-                    postDataparams.put("pot" + i/2, PointsPot.get(i + 1) );
+                for(int i = 0; i < PointsTemp5.size(); i = i + 2){
+                    postDataparams.put("Tiempo" + i/2, PointsTemp0.get(i));
+                    postDataparams.put("Sensor0" + i/2, PointsTemp0.get(i + 1));
                     postDataparams.put("Sensor1" + i/2, PointsTemp1.get(i + 1));
                     postDataparams.put("Sensor2" + i/2, PointsTemp2.get(i + 1));
                     postDataparams.put("Sensor3" + i/2, PointsTemp3.get(i + 1));
                     postDataparams.put("Sensor4" + i/2, PointsTemp4.get(i + 1));
+                    postDataparams.put("Sensor5" + i/2, PointsTemp5.get(i + 1));
                 }
 
                 HttpURLConnection httpclient = (HttpURLConnection) url.openConnection();
@@ -706,7 +382,7 @@ public class GraphActivity extends AppCompatActivity {
         //Get response
         @Override
         protected void onPostExecute(String result) {
-             Toast.makeText(getApplicationContext(), "Saved...",
+             Toast.makeText(getApplicationContext(), "Saved!",
                     Toast.LENGTH_LONG).show();
         }
     }

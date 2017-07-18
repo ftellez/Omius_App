@@ -14,7 +14,6 @@ public class Start extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
         Intent intent = new Intent(this, RegisterActivity.class);
-        //Intent intent = new Intent(this, SignInActivity.class);
         startActivity(intent);
     }
 
