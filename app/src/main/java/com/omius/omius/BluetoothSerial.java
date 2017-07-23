@@ -55,6 +55,8 @@ public class BluetoothSerial {
 
     String devicePrefix;
 
+    boolean doTerminate = false;
+
     /**
      * Listens for discount message from bluetooth system and restablishing a connection
      */
@@ -71,10 +73,13 @@ public class BluetoothSerial {
                     //clean up any streams
                     close();
 
-                    //reestablish connect
-                    connect();
+                    if(!doTerminate){
+                        //reestablish connect
+                        connect();
 
-                    LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(BLUETOOTH_DISCONNECTED));
+                        LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(BLUETOOTH_DISCONNECTED));
+                    }
+
                 }
             }
         }
@@ -276,16 +281,19 @@ public class BluetoothSerial {
 
         int bufferSize = 0;
 
+        boolean shutdown = false;
+
         public void run() {
             Log.i("serialReader", "Starting serial loop");
             while (!isInterrupted()) {
                 try {
-
 					/*
 					 * check for some bytes, or still bytes still left in
 					 * buffer
 					 */
                     if (available() > 0){
+
+                        Log.d(BMX_BLUETOOTH, "Getting new byte... ");
 
                         int newBytes = read(buffer, bufferSize, MAX_BYTES - bufferSize);
                         if (newBytes > 0)
@@ -307,7 +315,7 @@ public class BluetoothSerial {
                         }
 
                         try {
-                            Thread.sleep(100);
+                            Thread.sleep(300);
                         } catch (InterruptedException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -347,7 +355,7 @@ public class BluetoothSerial {
             serialReader.interrupt();
 
             try {
-                serialReader.join(1000);
+                serialReader.join(500);
             } catch (InterruptedException ie) {}
         }
 

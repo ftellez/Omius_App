@@ -31,6 +31,7 @@ import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.UserManager;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -87,15 +88,7 @@ public class GraphActivity extends AppCompatActivity {
     private StringBuilder recDataString = new StringBuilder();
     private BluetoothSerial btOmius = null;
 
-    String coordtime = null;
-    String coordsens0 = null;
-    String coordsens1 = null;
-    String coordsens2 = null;
-    String coordsens3 = null;
-    String coordsens4 = null;
-    String coordsens5 = null;
-
-    String eraseSub;
+    float currMaxTime = 0;
     int lineEnding;
     int pointer = 0;
     boolean isGraphEnabled = true;
@@ -145,45 +138,54 @@ public class GraphActivity extends AppCompatActivity {
             @Override
             public int read(int bufferSize, byte[] buffer){
                 int respReturn = 0;
+                int comaCount = 0;
                 final String TAG = "MessageHandler";
                 String readMessage = new String(buffer);                          // msg.arg1 = bytes from connect thread
                 lineEnding = readMessage.indexOf("\r\n");
                 if (lineEnding != -1){
                     recDataString = new StringBuilder(readMessage.substring(0,lineEnding));
-                    while(recDataString.indexOf(",") > 0){
-                        PointsToParse.add(recDataString.substring(0,recDataString.indexOf(",")));
-                        try {
-                            recDataString.delete(0, recDataString.indexOf(",")+1);                    //clear all string data
-                        } catch (StringIndexOutOfBoundsException ex) {
-                            Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
+                    for (int i = 0; i < recDataString.length(); i++){
+                        if(recDataString.charAt(i) == ','){
+                            comaCount++;
                         }
                     }
-                    PointsTemp0.add(Float.parseFloat(PointsToParse.get(pointer)));
-                    PointsTemp0.add(Float.parseFloat(PointsToParse.get(pointer + 1)));
-                    PointsTemp1.add(Float.parseFloat(PointsToParse.get(pointer)));
-                    PointsTemp1.add(Float.parseFloat(PointsToParse.get(pointer + 2)));
-                    PointsTemp2.add(Float.parseFloat(PointsToParse.get(pointer)));
-                    PointsTemp2.add(Float.parseFloat(PointsToParse.get(pointer + 3)));
-                    PointsTemp3.add(Float.parseFloat(PointsToParse.get(pointer)));
-                    PointsTemp3.add(Float.parseFloat(PointsToParse.get(pointer + 4)));
-                    PointsTemp4.add(Float.parseFloat(PointsToParse.get(pointer)));
-                    PointsTemp4.add(Float.parseFloat(PointsToParse.get(pointer + 5)));
-                    PointsTemp5.add(Float.parseFloat(PointsToParse.get(pointer)));
-                    PointsTemp5.add(Float.parseFloat(PointsToParse.get(pointer + 6)));
 
-                    Log.d(TAG, "Graph Enabled: " + String.valueOf(isGraphEnabled));
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (isGraphEnabled) {
-                                RefreshGraph();
-                                Log.d(TAG, "Entered refresh graph.");
+                    if(comaCount == 7){
+                        while(recDataString.indexOf(",") > 0){
+                            PointsToParse.add(recDataString.substring(0,recDataString.indexOf(",")));
+                            try {
+                                recDataString.delete(0, recDataString.indexOf(",")+1);                    //clear all string data
+                            } catch (StringIndexOutOfBoundsException ex) {
+                                Toast.makeText(getBaseContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
                             }
                         }
-                    });
+                        PointsTemp0.add(Float.parseFloat(PointsToParse.get(pointer)));
+                        PointsTemp0.add(Float.parseFloat(PointsToParse.get(pointer + 1)));
+                        PointsTemp1.add(Float.parseFloat(PointsToParse.get(pointer)));
+                        PointsTemp1.add(Float.parseFloat(PointsToParse.get(pointer + 2)));
+                        PointsTemp2.add(Float.parseFloat(PointsToParse.get(pointer)));
+                        PointsTemp2.add(Float.parseFloat(PointsToParse.get(pointer + 3)));
+                        PointsTemp3.add(Float.parseFloat(PointsToParse.get(pointer)));
+                        PointsTemp3.add(Float.parseFloat(PointsToParse.get(pointer + 4)));
+                        PointsTemp4.add(Float.parseFloat(PointsToParse.get(pointer)));
+                        PointsTemp4.add(Float.parseFloat(PointsToParse.get(pointer + 5)));
+                        PointsTemp5.add(Float.parseFloat(PointsToParse.get(pointer)));
+                        PointsTemp5.add(Float.parseFloat(PointsToParse.get(pointer + 6)));
 
-                    pointer = pointer + 7;
+                        Log.d(TAG, "Graph Enabled: " + String.valueOf(isGraphEnabled));
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (isGraphEnabled) {
+                                    RefreshGraph();
+                                    Log.d(TAG, "Entered refresh graph.");
+                                }
+                            }
+                        });
+
+                        pointer = pointer + 7;
+                    }
                     respReturn = lineEnding + 2;
                 }
                 return respReturn;
@@ -194,9 +196,15 @@ public class GraphActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 isGraphEnabled = false;
-                new SendPOSTrequest().execute();
+                Intent i = new Intent(GraphActivity.this,HttpPostService.class);
+                i.putExtra("Temp0List",PointsTemp0);
+                i.putExtra("Temp1List",PointsTemp1);
+                i.putExtra("Temp2List",PointsTemp2);
+                i.putExtra("Temp3List",PointsTemp3);
+                i.putExtra("Temp4List",PointsTemp4);
+                i.putExtra("Temp5List",PointsTemp5);
+                startService(i);
                 saveImage.setEnabled(true);
-
             }
         });
 
@@ -229,43 +237,113 @@ public class GraphActivity extends AppCompatActivity {
 
     public void RefreshGraph() {
         final String TAG = "RefreshGraph";
-        if (isGraphEnabled) {
-            entries.add(new Entry(PointsTemp0.get(graphPoints), PointsTemp0.get(graphPoints + 1)));
-            entriesTemp1.add(new Entry(PointsTemp1.get(graphPoints), PointsTemp1.get(graphPoints + 1)));
-            entriesTemp2.add(new Entry(PointsTemp2.get(graphPoints), PointsTemp2.get(graphPoints + 1)));
-            entriesTemp3.add(new Entry(PointsTemp3.get(graphPoints), PointsTemp3.get(graphPoints + 1)));
-            entriesTemp4.add(new Entry(PointsTemp4.get(graphPoints), PointsTemp4.get(graphPoints + 1)));
-            entriesTemp5.add(new Entry(PointsTemp5.get(graphPoints), PointsTemp5.get(graphPoints + 1)));
-            LineDataSet datasetTempCorp0 = new LineDataSet(entries, "Antebrazo Izquierdo");
-            datasetTempCorp0.setColor(Color.BLUE);
-            datasetTempCorp0.setCircleColor(Color.BLUE);
-            LineDataSet datasetTempCorp1 = new LineDataSet(entriesTemp1, "Antebrazo Derecho");
-            datasetTempCorp1.setColor(Color.CYAN);
-            datasetTempCorp1.setCircleColor(Color.CYAN);
-            LineDataSet datasetTempCorp2 = new LineDataSet(entriesTemp2, "Brazo Izquierdo");
-            datasetTempCorp2.setColor(Color.MAGENTA);
-            datasetTempCorp2.setCircleColor(Color.MAGENTA);
-            LineDataSet datasetTempCorp3 = new LineDataSet(entriesTemp3, "Brazo Derecho");
-            datasetTempCorp3.setColor(Color.GRAY);
-            datasetTempCorp3.setCircleColor(Color.GRAY);
-            LineDataSet datasetTempCorp4 = new LineDataSet(entriesTemp4, "Pectoral Izquierdo");
-            datasetTempCorp4.setColor(Color.GREEN);
-            datasetTempCorp4.setCircleColor(Color.GREEN);
-            LineDataSet datasetTempCorp5 = new LineDataSet(entriesTemp5, "Pectoral Derecho");
-            datasetTempCorp5.setColor(Color.RED);
-            datasetTempCorp5.setCircleColor(Color.RED);
-            List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
-            dataset.add(datasetTempCorp0);
-            dataset.add(datasetTempCorp1);
-            dataset.add(datasetTempCorp2);
-            dataset.add(datasetTempCorp3);
-            dataset.add(datasetTempCorp4);
-            dataset.add(datasetTempCorp5);
-            LineData lineData = new LineData(dataset);
-            chart.setData(lineData);
-            setChartOptions();
-            graphPoints = graphPoints + 2;
-            Log.d(TAG,"Points added: " + graphPoints/2);
+        try {
+            if (isGraphEnabled) {
+                if(graphPoints > 0){
+                    if(PointsTemp1.get(graphPoints) > currMaxTime){
+                        currMaxTime = PointsTemp1.get(graphPoints);
+                        Log.d(TAG,"When time is bigger.");
+                        entries.add(new Entry(PointsTemp0.get(graphPoints), PointsTemp0.get(graphPoints + 1)));
+                        entriesTemp1.add(new Entry(PointsTemp1.get(graphPoints), PointsTemp1.get(graphPoints + 1)));
+                        Log.d(TAG,"entriesTemp1: " + PointsTemp1.get(graphPoints) + "," + PointsTemp1.get(graphPoints + 1));
+                        entriesTemp2.add(new Entry(PointsTemp2.get(graphPoints), PointsTemp2.get(graphPoints + 1)));
+                        Log.d(TAG,"entriesTemp2: " + PointsTemp2.get(graphPoints) + "," + PointsTemp2.get(graphPoints + 1));
+                        entriesTemp3.add(new Entry(PointsTemp3.get(graphPoints), PointsTemp3.get(graphPoints + 1)));
+                        Log.d(TAG,"entriesTemp3: " + PointsTemp3.get(graphPoints) + "," + PointsTemp3.get(graphPoints + 1));
+                        entriesTemp4.add(new Entry(PointsTemp4.get(graphPoints), PointsTemp4.get(graphPoints + 1)));
+                        Log.d(TAG,"entriesTemp4: " + PointsTemp4.get(graphPoints) + "," + PointsTemp4.get(graphPoints + 1));
+                        entriesTemp5.add(new Entry(PointsTemp5.get(graphPoints), PointsTemp5.get(graphPoints + 1)));
+                        Log.d(TAG,"entriesTemp5: " + PointsTemp5.get(graphPoints) + "," + PointsTemp5.get(graphPoints + 1));
+                        LineDataSet datasetTempCorp0 = new LineDataSet(entries, "Antebrazo Izquierdo");
+                        datasetTempCorp0.setColor(Color.BLUE);
+                        datasetTempCorp0.setCircleColor(Color.BLUE);
+                        LineDataSet datasetTempCorp1 = new LineDataSet(entriesTemp1, "Antebrazo Derecho");
+                        datasetTempCorp1.setColor(Color.CYAN);
+                        datasetTempCorp1.setCircleColor(Color.CYAN);
+                        LineDataSet datasetTempCorp2 = new LineDataSet(entriesTemp2, "Brazo Izquierdo");
+                        datasetTempCorp2.setColor(Color.MAGENTA);
+                        datasetTempCorp2.setCircleColor(Color.MAGENTA);
+                        LineDataSet datasetTempCorp3 = new LineDataSet(entriesTemp3, "Brazo Derecho");
+                        datasetTempCorp3.setColor(Color.GRAY);
+                        datasetTempCorp3.setCircleColor(Color.GRAY);
+                        LineDataSet datasetTempCorp4 = new LineDataSet(entriesTemp4, "Pectoral Izquierdo");
+                        datasetTempCorp4.setColor(Color.GREEN);
+                        datasetTempCorp4.setCircleColor(Color.GREEN);
+                        LineDataSet datasetTempCorp5 = new LineDataSet(entriesTemp5, "Pectoral Derecho");
+                        datasetTempCorp5.setColor(Color.RED);
+                        datasetTempCorp5.setCircleColor(Color.RED);
+                        List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
+                        dataset.add(datasetTempCorp0);
+                        dataset.add(datasetTempCorp1);
+                        dataset.add(datasetTempCorp2);
+                        dataset.add(datasetTempCorp3);
+                        dataset.add(datasetTempCorp4);
+                        dataset.add(datasetTempCorp5);
+                        LineData lineData = new LineData(dataset);
+                        chart.setData(lineData);
+                        setChartOptions();
+                    } else {
+                        Log.e(TAG,"ERROR - When new time is less than previous time");
+                    }
+                } else {
+                    Log.d(TAG,"When graphPoints is zero.");
+                    entries.add(new Entry(PointsTemp0.get(graphPoints), PointsTemp0.get(graphPoints + 1)));
+                    entriesTemp1.add(new Entry(PointsTemp1.get(graphPoints), PointsTemp1.get(graphPoints + 1)));
+                    Log.d(TAG,"entriesTemp1: " + PointsTemp1.get(graphPoints) + "," + PointsTemp1.get(graphPoints + 1));
+                    entriesTemp2.add(new Entry(PointsTemp2.get(graphPoints), PointsTemp2.get(graphPoints + 1)));
+                    Log.d(TAG,"entriesTemp2: " + PointsTemp2.get(graphPoints) + "," + PointsTemp2.get(graphPoints + 1));
+                    entriesTemp3.add(new Entry(PointsTemp3.get(graphPoints), PointsTemp3.get(graphPoints + 1)));
+                    Log.d(TAG,"entriesTemp3: " + PointsTemp3.get(graphPoints) + "," + PointsTemp3.get(graphPoints + 1));
+                    entriesTemp4.add(new Entry(PointsTemp4.get(graphPoints), PointsTemp4.get(graphPoints + 1)));
+                    Log.d(TAG,"entriesTemp4: " + PointsTemp4.get(graphPoints) + "," + PointsTemp4.get(graphPoints + 1));
+                    entriesTemp5.add(new Entry(PointsTemp5.get(graphPoints), PointsTemp5.get(graphPoints + 1)));
+                    Log.d(TAG,"entriesTemp5: " + PointsTemp5.get(graphPoints) + "," + PointsTemp5.get(graphPoints + 1));
+                    LineDataSet datasetTempCorp0 = new LineDataSet(entries, "Antebrazo Izquierdo");
+                    datasetTempCorp0.setColor(Color.BLUE);
+                    //datasetTempCorp0.setCircleColor(Color.BLUE);
+                    datasetTempCorp0.setDrawCircles(false);
+                    datasetTempCorp0.setCircleRadius((float) 0.5);
+                    LineDataSet datasetTempCorp1 = new LineDataSet(entriesTemp1, "Antebrazo Derecho");
+                    datasetTempCorp1.setColor(Color.CYAN);
+                    //datasetTempCorp1.setCircleColor(Color.CYAN);
+                    datasetTempCorp1.setDrawCircles(false);
+                    datasetTempCorp1.setCircleRadius((float) 0.1);
+                    LineDataSet datasetTempCorp2 = new LineDataSet(entriesTemp2, "Brazo Izquierdo");
+                    datasetTempCorp2.setColor(Color.MAGENTA);
+                    //datasetTempCorp2.setCircleColor(Color.MAGENTA);
+                    datasetTempCorp2.setDrawCircles(false);
+                    datasetTempCorp2.setCircleRadius((float) 0.1);
+                    LineDataSet datasetTempCorp3 = new LineDataSet(entriesTemp3, "Brazo Derecho");
+                    datasetTempCorp3.setColor(Color.GRAY);
+                    //datasetTempCorp3.setCircleColor(Color.GRAY);
+                    datasetTempCorp3.setDrawCircles(false);
+                    datasetTempCorp3.setCircleRadius((float) 0.1);
+                    LineDataSet datasetTempCorp4 = new LineDataSet(entriesTemp4, "Pectoral Izquierdo");
+                    datasetTempCorp4.setColor(Color.GREEN);
+                    //datasetTempCorp4.setCircleColor(Color.GREEN);
+                    datasetTempCorp4.setDrawCircles(false);
+                    datasetTempCorp4.setCircleRadius((float) 0.1);
+                    LineDataSet datasetTempCorp5 = new LineDataSet(entriesTemp5, "Pectoral Derecho");
+                    datasetTempCorp5.setColor(Color.RED);
+                    //datasetTempCorp5.setCircleColor(Color.RED);
+                    datasetTempCorp5.setDrawCircles(false);
+                    datasetTempCorp5.setCircleRadius((float) 0.1);
+                    List<ILineDataSet> dataset = new ArrayList<ILineDataSet>();
+                    dataset.add(datasetTempCorp0);
+                    dataset.add(datasetTempCorp1);
+                    dataset.add(datasetTempCorp2);
+                    dataset.add(datasetTempCorp3);
+                    dataset.add(datasetTempCorp4);
+                    dataset.add(datasetTempCorp5);
+                    LineData lineData = new LineData(dataset);
+                    chart.setData(lineData);
+                    setChartOptions();
+                }
+                graphPoints = graphPoints + 2;
+                Log.d(TAG,"Points added: " + graphPoints/2);
+            }
+        } catch (Exception e){
+            Toast.makeText(this,e.getMessage(),Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -288,7 +366,7 @@ public class GraphActivity extends AppCompatActivity {
         rightyaxis.setTextColor(Color.WHITE);
         xaxis.setTextColor(Color.WHITE);
         chart.setDescription(desc);
-        //chart.fitScreen();
+        chart.fitScreen();
         chart.invalidate(); // refresh
     }
 
@@ -305,6 +383,13 @@ public class GraphActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         btOmius.onResume();
+    }
+
+    @Override
+    public void onBackPressed(){
+        super.onBackPressed();
+        btOmius.doTerminate = true;
+        btOmius.close();
     }
 
     //method to check if the device has Bluetooth and if it is on.
